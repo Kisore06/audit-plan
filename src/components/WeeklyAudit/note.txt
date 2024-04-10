@@ -1,0 +1,44 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
+
+const AuditView = () => {
+    const { area, date } = useParams(); // Extract area and date from route params
+    const [auditData, setAuditData] = useState([]);
+
+    useEffect(() => {
+        const fetchAuditData = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8001/audits?areaName=${area}&auditDate=${date}`);
+                setAuditData(response.data);
+            } catch (error) {
+                console.error('Error fetching audit data:', error);
+            }
+        };
+
+        if (area && date) {
+            fetchAuditData();
+        }
+    }, [area, date]);
+
+    return (
+        <div>
+            <h2>Audit Details</h2>
+            {auditData.length > 0 ? (
+                auditData.map((audit, index) => (
+                    <div key={index}>
+                        <h3>Area Name: {audit.area_name}</h3>
+                        <p>Audit Date: {audit.audit_date}</p>
+                        <p>Auditor Name: {audit.auditor_name}</p>
+                        <p>Auditor Phone: {audit.auditor_phone}</p>
+                        {/* Add more fields as needed */}
+                    </div>
+                ))
+            ) : (
+                <p>No audit data found for the selected area and date.</p>
+            )}
+        </div>
+    );
+};
+
+export default AuditView;
