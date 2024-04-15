@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 const WeeklyAudit = () => {
     const [showSubLines, setShowSubLines] = useState(false);
     const [selectedDates, setSelectedDates] = useState('');
+    const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
 
     
     const toggleSubLines = (title) => {
@@ -20,6 +21,10 @@ const WeeklyAudit = () => {
             ...prevDates,
             [area]: date,
         }));
+    };
+
+    const handleDateChangeAudit = (e) => {
+        setSelectedDateAudit(e.target.value);
     };
 
     const handleView = (area, date) => {
@@ -47,19 +52,31 @@ const WeeklyAudit = () => {
             </div>
             <h3 className="sub-list"><a href='/audit'>Female</a></h3>
             <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('mainAuditoriumFemale', e.target.value)} />
+                <input type="date" className="date-input" onChange={(e) => handleDateChange('Main Auditorium Backside - female', e.target.value)} />
                 <button className="view-button">
-                    {handleView('mainAuditoriumFemale', selectedDates['mainAuditoriumFemale'])}
+                    {handleView('Main Auditorium Backside - female', selectedDates['Main Auditorium Backside - female'])}
                 </button>
             </div>
         </div>
       )}
       <h3 className="he3" onClick={() => toggleSubLines('learningCentre')}>2. Learning Centre Backside - Restroom </h3>
       {showSubLines['learningCentre'] && (
-          <div>
+        <div>
             <h3 className="sub-list"><a href='/audit'>Male</a></h3>
+            <div className="date-view-container">
+                <input type="date" className="date-input" onChange={(e) => handleDateChange('Learning Centre Backside - male', e.target.value)} />
+                <button className="view-button">
+                    {handleView('Learning Centre Backside - male', selectedDates['Learning Centre Backside - male'])}
+                </button>
+            </div>
             <h3 className="sub-list"><a href='/audit'>Female</a></h3>
-          </div>
+            <div className="date-view-container">
+                <input type="date" className="date-input" onChange={(e) => handleDateChange('Learning Centre Backside - female', e.target.value)} />
+                <button className="view-button">
+                    {handleView('Learning Centre Backside - female', selectedDates['Learning Centre Backside - female'])}
+                </button>
+            </div>
+        </div>
       )}
       <h3 className="he3" onClick={() => toggleSubLines('ground')}>3. Near to Football Playground - Restroms </h3>
       {showSubLines['ground'] && (
@@ -107,6 +124,41 @@ const WeeklyAudit = () => {
       <h3 className="sub-list"><a href='/'>b. Chief Executive Room </a></h3>
       <h3 className="he3"><a href='/'>12. SF Block Board Room </a></h3>
     </div>
+    <div className="button-container">
+    <button className="action-button" onClick={() => toggleSubLines('checkAudits')} >Check Audits</button>
+    {showSubLines['checkAudits'] && (
+          <div className="date-view-audit">
+          <input type="date" value={selectedDateAudit} onChange={handleDateChangeAudit} />
+          <Link className="view-button" to={`/checkAudits/${selectedDateAudit}`}
+           onClick={(e) => {
+                if (!selectedDateAudit) {
+                    e.preventDefault();
+                    alert('Please select a date before proceeding.');
+                }
+            }}>
+            <VisibilityIcon />
+          </Link>
+          </div>
+      )}
+    </div>
+    <div className="button-container">
+    <button className="action-button" onClick={() => toggleSubLines('assignTasks')} >Assign Tasks to Audits</button>
+    {showSubLines['assignTasks'] && (
+          <div className="date-view-audit">
+          <input type="date" value={selectedDateAudit} onChange={handleDateChangeAudit} />
+          <Link className="view-button"  to={`assignWork/${selectedDateAudit}`}
+           onClick={(e) => {
+                if (!selectedDateAudit) {
+                    e.preventDefault();
+                    alert('Please select a date before proceeding.');
+                }
+            }}>
+            <VisibilityIcon />
+          </Link>
+          </div>
+      )}
+    </div>
+
     </div>
   )
 }

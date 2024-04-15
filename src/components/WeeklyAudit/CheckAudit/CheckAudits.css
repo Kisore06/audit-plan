@@ -1,0 +1,19 @@
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.audit-table th, .audit-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.audit-table th {
+    background-color: #f2f2f2;
+    text-align: left;
+}
+
+.audit-table input[type="text"], .audit-table input[type="date"] {
+    width: 100%;
+    box-sizing: border-box;
+}

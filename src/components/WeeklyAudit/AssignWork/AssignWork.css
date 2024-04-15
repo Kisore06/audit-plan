@@ -1,0 +1,41 @@
+/* AssignWork.css */
+.assign-work-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.assign-work-table th, .assign-work-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.assign-work-table th {
+    background-color: #f2f2f2;
+    text-align: left;
+}
+
+.assign-work-table input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.assign-work-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.assign-work-button {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.assign-work-button:hover {
+    background-color: #0056b3;
+}
