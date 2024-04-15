@@ -1,44 +1,102 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams } from 'react-router-dom';
+ { serialNumber: 1, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 2, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 3, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 4, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 5, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 6, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 7, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 8, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 9, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 10, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 11, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 12, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
 
-const AuditView = () => {
-    const { area, date } = useParams(); // Extract area and date from route params
-    const [auditData, setAuditData] = useState([]);
+
+        <td><input type="date" value={audit.auditDate} onChange={(e) => handleCellChange(e, index, 'auditDate')} /></td>
+                            <td><input type="text" value={audit.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')} /></td>
+
+
+import React, { useState, useEffect } from 'react';
+import './CheckAudits.css'; 
+
+const CheckAudits = () => {
+    const [audits, setAudits] = useState([
+        { serialNumber: 1, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 2, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 3, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 4, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 5, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 6, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 7, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 8, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 9, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 10, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 11, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+        { serialNumber: 12, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+    ]);
+    const [areaNames, setAreaNames] = useState([]);
+
+    // Fetch area names from the backend
+    const fetchAreaNames = async () => {
+        try {
+            const response = await fetch('http://localhost:8001/remote_area_weekly');
+            const data = await response.json();
+            return data.map(item => item.area);
+        } catch (error) {
+            console.error('Error fetching area names:', error);
+            return [];
+        }
+    };
 
     useEffect(() => {
-        const fetchAuditData = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8001/audits?areaName=${area}&auditDate=${date}`);
-                setAuditData(response.data);
-            } catch (error) {
-                console.error('Error fetching audit data:', error);
-            }
+        const getAreaNames = async () => {
+            const names = await fetchAreaNames();
+            // Deduplicate area names for non repeat
+            const uniqueNames = [...new Set(names)];
+            setAreaNames(uniqueNames);
         };
 
-        if (area && date) {
-            fetchAuditData();
-        }
-    }, [area, date]);
+        getAreaNames();
+    }, []);
+
+    // Function to handle changes in the table cells
+    const handleCellChange = (e, rowIndex, columnId) => {
+        const newAudits = [...audits];
+        newAudits[rowIndex][columnId] = e.target.value;
+        setAudits(newAudits);
+    };
 
     return (
-        <div>
-            <h2>Audit Details</h2>
-            {auditData.length > 0 ? (
-                auditData.map((audit, index) => (
-                    <div key={index}>
-                        <h3>Area Name: {audit.area_name}</h3>
-                        <p>Audit Date: {audit.audit_date}</p>
-                        <p>Auditor Name: {audit.auditor_name}</p>
-                        <p>Auditor Phone: {audit.auditor_phone}</p>
-                        {/* Add more fields as needed */}
-                    </div>
-                ))
-            ) : (
-                <p>No audit data found for the selected area and date.</p>
-            )}
+        <div style={{ paddingTop: '90px' }}>
+            <h2>Check Audits</h2>
+            <table className="audit-table">
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>Audit Date</th>
+                        <th>Task ID</th>
+                        <th>Audit Area</th>
+                        <th>Report Observation</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {audits.map((audit, index) => (
+                        <tr key={index}>
+                            <td>{index + 1}</td>
+                            {index === 0 && <td rowSpan={audits.length}><input type="date" value={audit.auditDate} onChange={(e) => handleCellChange(e, index, 'auditDate')}/></td>}
+                            {index === 0 && <td rowSpan={audits.length}><input type="text" value={audit.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')}/></td>}
+                            <td>
+                                {audit.auditArea || areaNames[index % areaNames.length]}
+                            </td>
+                            <td><input type="text" value={audit.reportObservation} onChange={(e) => handleCellChange(e, index, 'reportObservation')} /></td>
+                            <td><input type="text" value={audit.remarks} onChange={(e) => handleCellChange(e, index, 'remarks')} /></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-export default AuditView;
+export default CheckAudits;

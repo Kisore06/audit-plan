@@ -1,0 +1,33 @@
+return (
+    <div style={{ paddingTop: '90px' }}>
+        <h2>Check Audits</h2>
+        <table className="audit-table">
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Audit Date</th>
+                    <th>Task ID</th>
+                    <th>Audit Area</th>
+                    <th>Area Gender</th>
+                    <th>Report Observation</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {auditsData.map((audit, index) => {
+                    return audit.area_genders.map((gender, genderIndex) => (
+                        <tr key={`${index}-${genderIndex}`}>
+                            <td>{index + 1}</td>
+                            {index === 0 && <td rowSpan={auditsData.length}><input type="date" value={date} readOnly /></td>}
+                            {index === 0 && <td rowSpan={auditsData.length}><input type="text" value={audit.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')}/></td>}
+                            <td>{audit.area}</td>
+                            <td>{gender}</td>
+                            <td><input type="text" value={audit.reportObservation} onChange={(e) => handleCellChange(e, index, 'reportObservation')} /></td>
+                            <td><input type="text" value={audit.remarks} onChange={(e) => handleCellChange(e, index, 'remarks')} /></td>
+                        </tr>
+                    ));
+                })}
+            </tbody>
+        </table>
+    </div>
+);

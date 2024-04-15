@@ -1,0 +1,44 @@
+.audit-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.audit-details-left, .audit-details-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.audit-details-info {
+    display: flex;
+    align-items: center;
+    margin-right: 20px; /* Adjust as needed */
+}
+
+.audit-details-info h3 {
+    font-weight: bold;
+    margin-right: 5px; /* Adjust as needed */
+}
+
+.audit-details-info p {
+    margin: 0;
+}
+
+
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+
+.audit-table th, .audit-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.audit-table thead tr {
+    background-color: #f2f2f2;
+}
