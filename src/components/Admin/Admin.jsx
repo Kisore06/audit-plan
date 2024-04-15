@@ -1,22 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Admin.css'; // Import the CSS file
+
+const fetchRoles = async () => {
+    try {
+        const response = await axios.get('http://localhost:8001/roles');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        return [];
+    }
+};
 
 const AdminRegistration = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('');
+    const [roleId, setRoleId] = useState('');
+    const [role, setRole] = useState([]);
+
+    useEffect(() => {
+        fetchRoles().then(setRole);
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
-            const response = await axios.post('http://localhost:8001/register', { username, password, role });
+            const response = await axios.post('http://localhost:8001/register', { username, password, roleId});
             console.log(response.data);
-            // Handle successful registration, e.g., show a success message or redirect
         } catch (error) {
             console.error(error);
-            // Handle errors, e.g., show an error message
         }
     };
 
@@ -29,10 +41,11 @@ const AdminRegistration = () => {
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
                 <label htmlFor="role">Role</label>
-                <select id="role" value={role} onChange={(e) => setRole(e.target.value)} required>
+                <select id="role" value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
                     <option value="">Select Role</option>
-                    <option value="admin">Admin</option>
-                    <option value="user">User</option>
+                    {role.map(role => (
+                        <option key={role.id} value={role.id}>{role.role}</option>
+                    ))}
                 </select>
                 <button type="submit">Register</button>
             </form>

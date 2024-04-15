@@ -4,7 +4,7 @@ import './CheckAudits.css';
 
 const CheckAudits = () => {
     const { date } = useParams();
-
+    const [taskId, setTaskId] = useState('');
     const [areaNames, setAreaNames] = useState([]);
     const [auditsData, setAuditsData] = useState([]);
     const [processedAuditsData, setProcessedAuditsData] = useState({});
@@ -32,18 +32,21 @@ const CheckAudits = () => {
                 // Flatten the array of arrays into a single array
                 const auditsData = allAuditsData.flat();
                 setAuditsData(auditsData);
-                console.log(auditsData);
+                console.log("auditsData:",auditsData);
 
                 // Process the data to group areas by their area_gender
+                // Assuming areaData is the data fetched from 'http://localhost:8001/remote_area_weekly'
                 const processedData = areaData.reduce((acc, curr) => {
                     const areaName = curr.area;
                     const areaGender = curr.area_gender;
                     if (!acc[areaName]) {
-                        acc[areaName] = [];
+                        acc[areaName] = {};
                     }
-                    acc[areaName].push(areaGender);
+                    acc[areaName][areaGender] = []; // Initialize an array for each area and gender
                     return acc;
                 }, {});
+
+                // Now, processedData is structured as { areaName: { areaGender: [] } }
 
                 setProcessedAuditsData(processedData);
             } catch (error) {
@@ -51,7 +54,21 @@ const CheckAudits = () => {
             }
         };
 
+        const fetchTaskId = async () => {
+            try {
+                const response = await fetch(`http://localhost:8001/getTaskIdByDate?date=${date}`);
+                if (!response.ok) {
+                    throw new Error(`Error fetching taskId for date: ${date}`);
+                }
+                const data = await response.json();
+                setTaskId(data.taskId); 
+            } catch (error) {
+                console.error('Error fetching taskId:', error);
+            }
+        };
+
         fetchAreaNamesAndAudits();
+        fetchTaskId();
     }, [date]);
 
     const handleCellChange = (e, areaName, areaGender, field) => {
@@ -85,30 +102,39 @@ const CheckAudits = () => {
 
     const serialNumbers = generateSerialNumbers();
 
-    // Function to determine the report observation based on remarks
-    const determineReportObservation = (remarks) => {
-        if (typeof remarks === 'string') {
-            if (remarks.includes('good')) {
-                return 'No discrepancies found.';
-            } else if (remarks.trim() !== '') {
-                return remarks; // Return the remarks directly if they are not empty
-            } else {
-                return 'No data found.';
+    const determineReportObservation = (audit) => {
+        let comments = [];
+        let allGood = true; // Assume all remarks are good initially
+    
+        for (let i = 1; i <= 7; i++) {
+            const remark = audit[`remark_${i}`];
+            const comment = audit[`comment_${i}`];
+    
+            if (remark === 'bad') {
+                comments.push(`- ${comment || 'No comment provided.'}`);
+                allGood = false; 
             }
-        } else {
-            // Handle cases where remarks are not a string
-            // This is just a placeholder. You'll need to adjust this based on how your remarks are structured.
-            return 'No data found.';
         }
+    
+        if (allGood) {
+            return 'No discrepancies found.';
+        }
+    
+        if (comments.length > 0) {
+            return comments.join('<br />');
+        }
+    
+        return 'No data found.';
     };
     
+   
 
     return (
         <div style={{ paddingTop: '90px' }}>
             <h2>Check Audits</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <div>Audit Date: {formatDate(date)}</div>
-                <div>Task ID: <input type="text" value={auditsData[0]?.taskId || ''} onChange={(e) => handleCellChange(e, '', '', 'taskId')}/></div>
+                <div>Task ID: {taskId}</div>
             </div>
             <table className="audit-table">
                 <thead>
@@ -122,21 +148,29 @@ const CheckAudits = () => {
                 </thead>
                 <tbody>
                     {Object.entries(processedAuditsData).map(([areaName, areaGenders], areaIndex) => {
-                        return areaGenders.map((gender, genderIndex) => {
-                            const auditData = auditsData.find(audit => audit.area_name === areaName && audit.area_gender === gender);
-                            const reportObservation = determineReportObservation(auditData?.remarks || []);
+                        return Object.entries(areaGenders).map(([gender, audits], genderIndex) => {
+                            const specific = `${gender}`;
+                            const auditData = auditsData.find(audit => audit.area_name === specific);
+                            console.log("audit data:", auditData);
+                            const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
+                            console.log("report:", reportObservation);
+
+                            // Collect remarks into a single string
+                            const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
+
                             return (
                                 <tr key={`${areaName}-${gender}`}>
-                                    {genderIndex === 0 && <td rowSpan={areaGenders.length}>{serialNumbers[areaName]}</td>}
-                                    {genderIndex === 0 && <td rowSpan={areaGenders.length}>{areaName}</td>}
+                                    {genderIndex === 0 && <td rowSpan={Object.keys(areaGenders).length}>{serialNumbers[areaName]}</td>}
+                                    {genderIndex === 0 && <td rowSpan={Object.keys(areaGenders).length}>{areaName}</td>}
                                     <td>{gender}</td>
-                                    <td>{reportObservation}</td>
-                                    <td><input type="text" value={auditData?.remarks.join(', ') || ''} onChange={(e) => handleCellChange(e, areaName, gender, 'remarks')} /></td>
+                                    <td className="report-observation" dangerouslySetInnerHTML={{ __html: reportObservation }}></td>
+                                    <td><input type="text" value={remarksString} onChange={(e) => handleCellChange(e, areaName, gender, 'remarks')} /></td>
                                 </tr>
                             );
                         });
                     })}
                 </tbody>
+
             </table>
         </div>
     );

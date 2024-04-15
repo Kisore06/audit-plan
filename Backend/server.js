@@ -22,8 +22,6 @@ const db = mysql.createConnection({
     console.log('Connected to MySQL');
    });
 
-// Create a connection pool
-// const db = mysql.createPool(dbConfig);
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -63,12 +61,13 @@ app.post('/login', async (req, res) => {
     }
 });
 
-<<<<<<< HEAD
 // Endpoint to add new user
 app.post('/register', async (req, res) => {
-    const { username, password, role } = req.body;
+    console.log(req.body)
+    const { username, password, roleId } = req.body;
 
     try {
+        // Check if the username already exists
         const checkQuery = 'SELECT * FROM users WHERE username = ?';
         db.query(checkQuery, [username], async (error, results) => {
             if (error) {
@@ -77,9 +76,11 @@ app.post('/register', async (req, res) => {
             } else if (results.length > 0) {
                 res.status(400).send({ message: 'User already exists' });
             } else {
+                // Hash the password
                 const hashedPassword = await bcrypt.hash(password, 10);
+                // Insert the new user into the database
                 const insertQuery = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
-                db.query(insertQuery, [username, hashedPassword, role], (error) => {
+                db.query(insertQuery, [username, hashedPassword, roleId], (error) => {
                     if (error) {
                         console.error('Database error:', error);
                         res.status(500).send({ message: 'Database error', error: error.message });
@@ -91,20 +92,98 @@ app.post('/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Error:', error);
-        res.status(500).send({ message: 'Internal server error' });
-    }
+        res.status(500).send({ message: 'Internal server error' });
+ }
 });
 
-// Fetch audits
-app.get('/audits', (req, res) => {
-    const { areaName, auditDate } = req.query;
-    let query = 'SELECT * FROM audits';
-    let queryParams = [];
+//roles
+app.get('/roles', (req, res) => {
+    console.log('fetching user_roles')
+    const query = 'SELECT * FROM user_role'
+    db.query(query,(error,results)=>{
+        if (error) {
+            console.error('problem in users...')
+            res.status(500).send('problem in users...');
+        }else {
+            console.log('Fetched user roles');
+            res.send(results);
+        }  
+    });
+});
 
-    if (areaName) {
-        query += ' WHERE area_name = ?';
-        queryParams.push(areaName);
-=======
+// remote-area-weekly
+app.get('/remote_area_weekly', (req, res) => {
+    console.log('vanthuten...')
+ const query= 'SELECT * FROM remote_area_weekly'
+ db.query(query, (error, results) => {
+    if (error) {
+        console.error('code la prblm...')
+        res.status(500).send('code la prblm...');
+    }else {
+        console.log('vanthuten nu sollu...');
+        res.send(results);
+    }
+ });
+});
+
+// Assign task to a specific date
+app.post('/assignTask', (req, res) => {
+    const { date, taskId } = req.body;
+
+    if (!date || !taskId) {
+        return res.status(400).send({ message: 'Date and taskId must be provided.' });
+    }
+
+    // Check if a taskId already exists for the given date
+    const checkQuery = 'SELECT * FROM audit_tasks WHERE date = ?';
+    db.query(checkQuery, [date], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else if (results.length > 0) {
+            // A taskId already exists for this date
+            res.status(409).send({ message: 'A taskId is already assigned for this date.' });
+        } else {
+            // No taskId exists for this date, so insert the new task assignment
+            const insertQuery = 'INSERT INTO audit_tasks (date, task_id) VALUES (?, ?)';
+            db.query(insertQuery, [date, taskId], (error, results) => {
+                if (error) {
+                    console.error('Error inserting task assignment:', error);
+                    res.status(500).send({ message: 'Error inserting task assignment', error: error.message });
+                } else {
+                    res.send({ message: 'Task assigned successfully' });
+                }
+            });
+        }
+    });
+});
+
+// Fetch taskId by date
+app.get('/getTaskIdByDate', (req, res) => {
+    const { date } = req.query;
+
+    if (!date) {
+        return res.status(400).send({ message: 'Date must be provided.' });
+    }
+
+    const query = 'SELECT task_id FROM audit_tasks WHERE date = ?';
+    const values = [date];
+
+    db.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else if (results.length === 0) {
+            // No taskId found for the given date
+            res.status(404).send({ message: 'No taskId found for this date.' });
+        } else {
+            // Return the taskId
+            res.send({ taskId: results[0].task_id });
+        }
+    });
+});
+
+
 // audit-form
 app.get('/audit', (req, res) => {
     console.log('Processing audit request...');
@@ -112,7 +191,6 @@ app.get('/audit', (req, res) => {
 
     if (!areaName || !auditDate) {
         return res.status(400).send('Both areaName and auditDate must be provided.');
->>>>>>> ba8c028e1929dc30e9e074dec2e271bd992332e9
     }
 
     let query = 'SELECT * FROM audits WHERE area_name = ? AND audit_date = ?';
@@ -120,15 +198,8 @@ app.get('/audit', (req, res) => {
 
     db.query(query, queryParams, (error, results) => {
         if (error) {
-<<<<<<< HEAD
-            console.error('Error fetching audits:', error);
-            res.status(500).send({ message: 'Error fetching audits', error: error.message });
-        } else {
-            res.send(results);
-=======
             console.error('Error processing audit request:', error);
             return res.status(500).send('An error occurred while processing your request.');
->>>>>>> ba8c028e1929dc30e9e074dec2e271bd992332e9
         }
 
         console.log('Audit data retrieved successfully.');
@@ -136,13 +207,7 @@ app.get('/audit', (req, res) => {
     });
 });
 
-<<<<<<< HEAD
 // Submit audit form data
-=======
-
-
-// submit audit form data
->>>>>>> ba8c028e1929dc30e9e074dec2e271bd992332e9
 app.post('/submit-audit', (req, res) => {
     const formData = req.body;
     const questions = formData.questions;
@@ -168,8 +233,6 @@ app.post('/submit-audit', (req, res) => {
     });
 });
 
-<<<<<<< HEAD
-=======
 // audits
 app.get('/audits', (req, res) => {
     console.log('inside audits table...')
@@ -211,65 +274,7 @@ app.get('/audits/by-date-and-area', (req, res) => {
 });
 
 
-// Fetch audits by date and aggregate data
-app.get('/audits/aggregated', async (req, res) => {
-    console.log('Fetching aggregated audits...');
 
-    const { date } = req.query;
-
-    if (!date) {
-        return res.status(400).send('Date must be provided.');
-    }
-
-    try {
-        // Fetch areas
-        const areasQuery = 'SELECT * FROM remote_area_weekly';
-        const areasResult = await db.query(areasQuery);
-
-        // Ensure areasResult is an array
-        if (!Array.isArray(areasResult)) {
-            return res.status(500).send('Error fetching areas.');
-        }
-
-        // Fetch audits for the specified date
-        const auditsQuery = 'SELECT * FROM audits WHERE audit_date = ?';
-        const auditsResult = await db.query(auditsQuery, [date]);
-
-        // Ensure auditsResult is an array
-        if (!Array.isArray(auditsResult)) {
-            return res.status(500).send('Error fetching audits.');
-        }
-
-        // Aggregate data
-        const aggregatedData = areasResult.reduce((acc, area) => {
-            const areaAudits = auditsResult.filter(audit => audit.area_name.startsWith(area.area));
-            const hasDiscrepancies = areaAudits.some(audit => audit.remarks.includes('bad') || audit.comment_1.includes('bad') || audit.comment_2.includes('bad'));
-
-            acc[area.area] = {
-                area_name: area.area,
-                audit_date: date,
-                reportObservation: hasDiscrepancies ? `Discrepancies found in ${area.area}.` : 'No discrepancies found.',
-                remarks: areaAudits.map(audit => audit.remarks).join(' ')
-            };
-
-            return acc;
-        }, {});
-
-        // Convert the aggregated data object to an array
-        const aggregatedArray = Object.values(aggregatedData);
-
-        console.log('Aggregated audits fetched successfully.');
-        res.send(aggregatedArray);
-    } catch (error) {
-        console.error('Error fetching aggregated audits:', error);
-        res.status(500).send('Error fetching aggregated audits.');
-    }
-});
-
-        
-
-
->>>>>>> ba8c028e1929dc30e9e074dec2e271bd992332e9
 // Start the server
 const PORT = process.env.PORT || 8001;
 app.listen(PORT, () => {

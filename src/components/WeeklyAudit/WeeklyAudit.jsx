@@ -7,6 +7,8 @@ const WeeklyAudit = () => {
     const [showSubLines, setShowSubLines] = useState(false);
     const [selectedDates, setSelectedDates] = useState('');
     const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
+    const [selectedDateForTask, setSelectedDateForTask] = useState('');
+    const [taskIdForTask, setTaskIdForTask] = useState('');
 
     
     const toggleSubLines = (title) => {
@@ -33,6 +35,36 @@ const WeeklyAudit = () => {
         // Use Link to navigate to the AuditView component
         return <Link to={url}><VisibilityIcon/></Link>;
     };
+
+    const assignTask = async () => {
+      if (!selectedDateForTask || !taskIdForTask) {
+          alert('Please select a date and enter a Task ID before proceeding.');
+          return;
+      }
+  
+      try {
+          const response = await fetch(`http://localhost:8001/assignTask`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ date: selectedDateForTask, taskId: taskIdForTask }),
+          });
+  
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to assign task.');          }
+  
+          alert('Task assigned successfully.');
+          // Optionally, clear the input fields after successful assignment
+          setSelectedDateForTask('');
+          setTaskIdForTask('');
+      } catch (error) {
+          console.error('Error:', error);
+          alert(error.message);
+      }
+  };
+  
        
   return (
     <div style={{ paddingTop: '90px' }}>
@@ -141,6 +173,17 @@ const WeeklyAudit = () => {
           </div>
       )}
     </div>
+    <div className="button-container">
+        <button className="action-button" onClick={() => toggleSubLines('assignTaskID')}>Assign Task ID for audit</button>
+        {showSubLines['assignTaskID'] && (
+            <div className="date-view-audit">
+                <input type="date" value={selectedDateForTask} onChange={(e) => setSelectedDateForTask(e.target.value)} />
+                <input type="text" value={taskIdForTask} onChange={(e) => setTaskIdForTask(e.target.value)} placeholder="Enter Task ID" />
+                <button className="assign-button" onClick={assignTask}>Assign Task</button>
+            </div>
+        )}
+    </div>
+
     <div className="button-container">
     <button className="action-button" onClick={() => toggleSubLines('assignTasks')} >Assign Tasks to Audits</button>
     {showSubLines['assignTasks'] && (
