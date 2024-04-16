@@ -273,6 +273,84 @@ app.get('/audits/by-date-and-area', (req, res) => {
     });
 });
 
+// Submit audit form data
+app.post('/submit-audit-form', (req, res) => {
+    const { date, taskId, auditArea, specificArea, reportObservation, remarks, taskIdSpecific, actionTaken, progress } = req.body;
+
+    if (!date || !taskId || !auditArea || !specificArea || !reportObservation || !remarks || !taskIdSpecific || !actionTaken || !progress) {
+        return res.status(400).send({ message: 'All fields are required.' });
+    }
+
+    const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const values = [date, taskId, auditArea, specificArea, reportObservation, remarks, taskIdSpecific, actionTaken, progress];
+
+    db.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Error inserting audit form data:', error);
+            res.status(500).send({ message: 'Error inserting audit form data', error: error.message });
+        } else {
+            res.send({ message: 'Audit form data submitted successfully' });
+        }
+    });
+});
+
+// Fetch tasks by date range
+app.get('/fetchTasks', (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return res.status(400).send({ message: 'Both startDate and endDate must be provided.' });
+    }
+
+    const query = 'SELECT * FROM specific_task WHERE date BETWEEN ? AND ?';
+    const values = [startDate, endDate];
+
+    db.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+// Update task progress
+app.post('/updateTaskProgress', (req, res) => {
+    const { taskId, newProgress } = req.body;
+
+    if (!taskId || !newProgress) {
+        return res.status(400).send({ message: 'Both taskId and newProgress must be provided.' });
+    }
+
+    // Update the task's progress in the database
+    const query = 'UPDATE specific_task SET progress = ? WHERE task_id_specific = ?';
+    const values = [newProgress, taskId];
+
+    db.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else if (results.affectedRows === 0) {
+            // No rows were updated, which means the task_id_specific was not found
+            res.status(404).send({ message: 'Task not found' });
+        } else {
+            // Fetch the updated task to return it
+            const fetchQuery = 'SELECT * FROM specific_task WHERE task_id_specific = ?';
+            db.query(fetchQuery, [taskId], (error, results) => {
+                if (error) {
+                    console.error('Database error:', error);
+                    res.status(500).send({ message: 'Database error', error: error.message });
+                } else {
+                    // Assuming the task is found and updated successfully
+                    res.send(results[0]); // Return the updated task
+                }
+            });
+        }
+    });
+});
+
+
 
 
 // Start the server

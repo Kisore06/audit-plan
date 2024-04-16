@@ -17,3 +17,35 @@
     width: 100%;
     box-sizing: border-box;
 }
+
+.form-container-task {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 500px;
+}
+
+.form-content-task {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-title-task {
+    margin-bottom: 10px;
+}
+
+.form-field-task {
+    margin-bottom: 10px;
+}
+
+.form-submit-task {
+    align-self: flex-end;
+}
+

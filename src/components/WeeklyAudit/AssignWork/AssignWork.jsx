@@ -1,67 +1,96 @@
-import React, { useState } from 'react';
-import './AssignWork.css'; // Make sure to import the CSS file
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
 
 const AssignWork = () => {
-    const [tasks, setTasks] = useState([
-        { serialNumber: 1, taskId: '', auditArea: '', reportObservation: '', actionTaken: '', statusRemarks: '' },
-        // Add more initial rows as needed
-    ]);
+    const { startDate, endDate } = useParams();
+    const [tasks, setTasks] = useState([]);
 
-    const [newTask, setNewTask] = useState({ taskId: '', auditArea: '', reportObservation: '', actionTaken: '', statusRemarks: '' });
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const response = await fetch(`http://localhost:8001/fetchTasks?startDate=${startDate}&endDate=${endDate}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tasks');
+                }
+                const data = await response.json();
+                setTasks(data);
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            }
+        };
 
-    const handleCellChange = (e, rowIndex, columnId) => {
-        const newTasks = [...tasks];
-        newTasks[rowIndex][columnId] = e.target.value;
-        setTasks(newTasks);
+        fetchTasks();
+    }, [startDate, endDate]);
+
+    const handleProgressUpdate = async (taskId, newProgress) => {
+        try {
+            const response = await fetch(`http://localhost:8001/updateTaskProgress?taskId=${taskId}&newProgress=${newProgress}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ taskId, newProgress }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to update task progress');
+            }
+            // Assuming the backend returns the updated task
+            const updatedTask = await response.json();
+            setTasks(tasks.map(task => task.task_id_specific === taskId ? updatedTask : task));
+        } catch (error) {
+            console.error('Error updating task progress:', error);
+        }
     };
-
-    const handleNewTaskChange = (e) => {
-        setNewTask({ ...newTask, [e.target.name]: e.target.value });
-    };
-
-    const addNewTask = () => {
-        const newTaskCopy = { ...newTask, serialNumber: tasks.length + 1 };
-        setTasks([...tasks, newTaskCopy]);
-        setNewTask({ taskId: '', auditArea: '', reportObservation: '', actionTaken: '', statusRemarks: '' });
-    };
+    
 
     return (
         <div style={{ paddingTop: '90px' }}>
-        <h2>Assign Work</h2>
-            <table className="assign-work-table">
+            <h2>Tasks for {startDate} to {endDate}</h2>
+            <table className="audit-table">
                 <thead>
                     <tr>
-                        <th>Serial No.</th>
+                        <th>Serial Number</th>
+                        <th>Audit Date</th>
                         <th>Task ID</th>
                         <th>Audit Area</th>
+                        <th>Specific Area</th>
                         <th>Report Observation</th>
-                        <th>Action Taken</th>
-                        <th>Status/Remarks</th>
+                        <th>Remarks</th>
+                        <th>Specific Task ID</th>
+                        <th>action Taken</th>
+                        <th>Progress</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {tasks.map((task, index) => (
-                        <tr key={index}>
-                            <td>{task.serialNumber}</td>
-                            <td><input type="text" name="taskId" value={task.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')} /></td>
-                            <td><input type="text" name="auditArea" value={task.auditArea} onChange={(e) => handleCellChange(e, index, 'auditArea')} /></td>
-                            <td><input type="text" name="reportObservation" value={task.reportObservation} onChange={(e) => handleCellChange(e, index, 'reportObservation')} /></td>
-                            <td><input type="text" name="actionTaken" value={task.actionTaken} onChange={(e) => handleCellChange(e, index, 'actionTaken')} /></td>
-                            <td><input type="text" name="statusRemarks" value={task.statusRemarks} onChange={(e) => handleCellChange(e, index, 'statusRemarks')} /></td>
+                {tasks.map((task, index) => (
+                    <tr key={task.task_id_specific}>
+                            <td>{index + 1}</td>
+                            <td>{startDate}</td>
+                            <td>{task.task_id}</td>
+                            <td>{task.audit_area}</td>
+                            <td>{task.specific_area}</td>
+                            <td>{task.report_observation}</td>
+                            <td>{task.remarks}</td>
+                            <td>{task.task_id_specific}</td>
+                            <td>{task.action_taken}</td>
+                            <td>
+                                <select 
+                                    value={task.progress} 
+                                    onChange={(e) => handleProgressUpdate(task.task_id_specific, e.target.value)}
+                                    style={{ backgroundColor: task.progress === 'Completed' ? 'lightgreen' : 'lightblue' }}
+                                >
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
-            <form className="assign-work-form" onSubmit={(e) => { e.preventDefault(); addNewTask(); }}>
-                <input type="text" name="taskId" placeholder="Task ID" value={newTask.taskId} onChange={handleNewTaskChange} required />
-                <input type="text" name="auditArea" placeholder="Audit Area" value={newTask.auditArea} onChange={handleNewTaskChange} required />
-                <input type="text" name="reportObservation" placeholder="Report Observation" value={newTask.reportObservation} onChange={handleNewTaskChange} required />
-                <input type="text" name="actionTaken" placeholder="Action Taken" value={newTask.actionTaken} onChange={handleNewTaskChange} required />
-                <input type="text" name="statusRemarks" placeholder="Status/Remarks" value={newTask.statusRemarks} onChange={handleNewTaskChange} required />
-                <button className="assign-work-button" type="submit">Add Task</button>
-            </form>
         </div>
     );
+    
 };
 
 export default AssignWork;

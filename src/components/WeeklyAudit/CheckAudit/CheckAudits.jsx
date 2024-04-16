@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import './CheckAudits.css'; 
+import './CheckAudits.css';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { green, red } from '@mui/material/colors';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
 
 const CheckAudits = () => {
     const { date } = useParams();
@@ -8,6 +20,20 @@ const CheckAudits = () => {
     const [areaNames, setAreaNames] = useState([]);
     const [auditsData, setAuditsData] = useState([]);
     const [processedAuditsData, setProcessedAuditsData] = useState({});
+    const [selectedArea, setSelectedArea] = useState('');
+    const [selectedGender, setSelectedGender] = useState('');
+    const [selectedReportObservation, setSelectedReportObservation] = useState('');
+    const [selectedRemarks, setSelectedRemarks] = useState('');
+    const [isFormVisible, setIsFormVisible] = useState(false);
+    const formRef = useRef(null);
+    const [assignedTaskIds, setAssignedTaskIds] = useState([]);
+
+
+    const [formData, setFormData] = useState({
+        taskIdSpecific: '',
+        actionTaken: '',
+        progress: 'inprogress',
+    });
 
     useEffect(() => {
         const fetchAreaNamesAndAudits = async () => {
@@ -16,7 +42,7 @@ const CheckAudits = () => {
                 const areaData = await areaResponse.json();
                 const uniqueAreaNames = [...new Set(areaData.map(item => item.area))];
                 setAreaNames(uniqueAreaNames);
-                
+
                 const specificarea = [...new Set(areaData.map(item => item.area_gender))];
                 const fetchPromises = specificarea.map(async (gender) => {
                     const response = await fetch(`http://localhost:8001/audits/by-date-and-area?date=${date}&areaName=${gender}`);
@@ -25,28 +51,20 @@ const CheckAudits = () => {
                     }
                     return response.json();
                 });
-    
-                // Wait for all fetch promises to resolve
+
                 const allAuditsData = await Promise.all(fetchPromises);
-    
-                // Flatten the array of arrays into a single array
                 const auditsData = allAuditsData.flat();
                 setAuditsData(auditsData);
-                console.log("auditsData:",auditsData);
 
-                // Process the data to group areas by their area_gender
-                // Assuming areaData is the data fetched from 'http://localhost:8001/remote_area_weekly'
                 const processedData = areaData.reduce((acc, curr) => {
                     const areaName = curr.area;
                     const areaGender = curr.area_gender;
                     if (!acc[areaName]) {
                         acc[areaName] = {};
                     }
-                    acc[areaName][areaGender] = []; // Initialize an array for each area and gender
+                    acc[areaName][areaGender] = [];
                     return acc;
                 }, {});
-
-                // Now, processedData is structured as { areaName: { areaGender: [] } }
 
                 setProcessedAuditsData(processedData);
             } catch (error) {
@@ -61,7 +79,7 @@ const CheckAudits = () => {
                     throw new Error(`Error fetching taskId for date: ${date}`);
                 }
                 const data = await response.json();
-                setTaskId(data.taskId); 
+                setTaskId(data.taskId);
             } catch (error) {
                 console.error('Error fetching taskId:', error);
             }
@@ -81,16 +99,14 @@ const CheckAudits = () => {
         setAuditsData(updatedAuditsData);
     };
 
-    // Function to format date
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0!
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${day}-${month}-${year}`;
     };
 
-    // Generate a unique serial number for each area
     const generateSerialNumbers = () => {
         let serialNumber = 1;
         const serialNumbers = {};
@@ -104,30 +120,94 @@ const CheckAudits = () => {
 
     const determineReportObservation = (audit) => {
         let comments = [];
-        let allGood = true; // Assume all remarks are good initially
-    
+        let allGood = true;
+
         for (let i = 1; i <= 7; i++) {
             const remark = audit[`remark_${i}`];
             const comment = audit[`comment_${i}`];
-    
+
             if (remark === 'bad') {
                 comments.push(`- ${comment || 'No comment provided.'}`);
-                allGood = false; 
+                allGood = false;
             }
         }
-    
+
         if (allGood) {
             return 'No discrepancies found.';
         }
-    
+
         if (comments.length > 0) {
             return comments.join('<br />');
         }
-    
+
         return 'No data found.';
     };
-    
-   
+
+    //another useRef for closing the form when i click outside of it
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (formRef.current && !formRef.current.contains(event.target)) {
+                setIsFormVisible(false); 
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const newTaskId = formData.taskIdSpecific;
+
+        // Check if the new taskId already exists
+        if (assignedTaskIds.includes(newTaskId)) {
+            alert('A taskId with this value has already been assigned. Please choose a different taskId.');
+            return; // Prevent form submission
+        }
+
+        const progressValue = formData.progress === 'inprogress' ? 'In Progress' : 'Completed';
+
+        try {
+            const response = await fetch('http://localhost:8001/submit-audit-form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date,
+                    taskId,
+                    auditArea: selectedArea,
+                    specificArea: selectedGender,
+                    reportObservation: selectedReportObservation,
+                    remarks: selectedRemarks,
+                    taskIdSpecific: formData.taskIdSpecific,
+                    actionTaken: formData.actionTaken,
+                    progress: progressValue,
+                }),
+            });          
+
+            if (!response.ok) {
+                throw new Error('Failed to submit data');
+            }
+
+            setAssignedTaskIds([...assignedTaskIds, newTaskId]);
+
+            setIsFormVisible(false);
+            setFormData({
+                taskIdSpecific: '',
+                actionTaken: '',
+                progress: 'inprogress',
+            });
+            alert("specific Task ID assigned Succesfully!...")
+        } catch (error) {
+            console.error('Error submitting data:', error);
+        }
+    };
+ 
 
     return (
         <div style={{ paddingTop: '90px' }}>
@@ -144,6 +224,7 @@ const CheckAudits = () => {
                         <th>Specific Area</th>
                         <th>Report Observation</th>
                         <th>Remarks</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -151,12 +232,9 @@ const CheckAudits = () => {
                         return Object.entries(areaGenders).map(([gender, audits], genderIndex) => {
                             const specific = `${gender}`;
                             const auditData = auditsData.find(audit => audit.area_name === specific);
-                            console.log("audit data:", auditData);
                             const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
-                            console.log("report:", reportObservation);
-
-                            // Collect remarks into a single string
                             const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
+                            const isBadRemark = remarksString.split(',').some(remark => remark.trim() === 'bad');
 
                             return (
                                 <tr key={`${areaName}-${gender}`}>
@@ -165,15 +243,71 @@ const CheckAudits = () => {
                                     <td>{gender}</td>
                                     <td className="report-observation" dangerouslySetInnerHTML={{ __html: reportObservation }}></td>
                                     <td><input type="text" value={remarksString} onChange={(e) => handleCellChange(e, areaName, gender, 'remarks')} /></td>
+                                    <td>
+                                    {isBadRemark && ( // Only render the IconButton if isBadRemark is true
+                                        <IconButton
+                                            size="small"
+                                            onClick={(event) => {
+                                                setSelectedArea(areaName);
+                                                setSelectedGender(gender);
+                                                setSelectedReportObservation(determineReportObservation(auditData));
+                                                setSelectedRemarks(remarksString);
+                                                setIsFormVisible(true);
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    )}
+
+                                    </td>
                                 </tr>
                             );
                         });
                     })}
                 </tbody>
-
             </table>
+            {isFormVisible && (
+                <Box ref={formRef} className="form-container-task">
+                    <form onSubmit={handleSubmit} className="form-content-task">
+                        <Typography variant="h6" className="form-title-task">Assign Specific Task ID</Typography>
+                        <TextField
+                            label="Task ID Specific"
+                            name="taskIdSpecific"
+                            value={formData.taskIdSpecific}
+                            onChange={(e) => setFormData({ ...formData, taskIdSpecific: e.target.value })}
+                            className="form-field-task"
+                        />
+                        <TextField
+                            label="Action Taken"
+                            name="actionTaken"
+                            value={formData.actionTaken}
+                            onChange={(e) => setFormData({ ...formData, actionTaken: e.target.value })}
+                            className="form-field-task"
+                        />
+                        <FormControl component="fieldset" className="form-field-task">
+                            <FormLabel component="legend">Progress</FormLabel>
+                            <RadioGroup
+                                row
+                                aria-label="progress"
+                                name="row-radio-buttons-group"
+                                value={formData.progress}
+                                onChange={(e) => setFormData({ ...formData, progress: e.target.value })}
+                            >
+                                <FormControlLabel value="inprogress" control={<Radio color="primary" sx={{ color: red[500] }} />} label="In Progress" />
+                                <FormControlLabel value="completed" control={<Radio color="primary" sx={{ color: green[500] }} />} label="Completed" />
+                            </RadioGroup>
+                        </FormControl>
+                        <Button variant="contained" color="primary" type="submit" className="form-submit-task">
+                            Submit
+                        </Button>
+                    </form>
+                </Box>
+
+            )}
         </div>
     );
+    
+    
 };
 
 export default CheckAudits;

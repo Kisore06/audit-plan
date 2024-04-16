@@ -9,6 +9,8 @@ const WeeklyAudit = () => {
     const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
     const [selectedDateForTask, setSelectedDateForTask] = useState('');
     const [taskIdForTask, setTaskIdForTask] = useState('');
+    const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
+
 
     
     const toggleSubLines = (title) => {
@@ -32,9 +34,17 @@ const WeeklyAudit = () => {
     const handleView = (area, date) => {
         // Construct the URL for navigation
         const url = `/audit/${area}/${date}`;
-        // Use Link to navigate to the AuditView component
         return <Link to={url}><VisibilityIcon/></Link>;
     };
+
+    const handleStartDateChange = (e) => {
+        setDateRange({ ...dateRange, startDate: e.target.value });
+    };
+    
+    const handleEndDateChange = (e) => {
+        setDateRange({ ...dateRange, endDate: e.target.value });
+    };
+    
 
     const assignTask = async () => {
       if (!selectedDateForTask || !taskIdForTask) {
@@ -184,23 +194,42 @@ const WeeklyAudit = () => {
         )}
     </div>
 
+    {/* view assigned taska and mark the progress within a date range */}
     <div className="button-container">
-    <button className="action-button" onClick={() => toggleSubLines('assignTasks')} >Assign Tasks to Audits</button>
+    <button className="action-button" onClick={() => toggleSubLines('assignTasks')}>Check Assigned Tasks</button>
     {showSubLines['assignTasks'] && (
-          <div className="date-view-audit">
-          <input type="date" value={selectedDateAudit} onChange={handleDateChangeAudit} />
-          <Link className="view-button"  to={`assignWork/${selectedDateAudit}`}
-           onClick={(e) => {
-                if (!selectedDateAudit) {
-                    e.preventDefault();
-                    alert('Please select a date before proceeding.');
-                }
-            }}>
-            <VisibilityIcon />
-          </Link>
-          </div>
-      )}
-    </div>
+        <div className="date-view-audit">
+        <p>Start date:</p>
+            <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={handleStartDateChange}
+                placeholder="Start Date"
+                className="date-range"
+            />
+            <p>End date:</p>
+            <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={handleEndDateChange}
+                placeholder="End Date"
+                className="date-range"
+            />
+            <Link
+                className="view-button"
+                to={`/assignWork/${dateRange.startDate}/${dateRange.endDate}`}
+                onClick={(e) => {
+                    if (!dateRange.startDate || !dateRange.endDate) {
+                        e.preventDefault();
+                        alert('Please select both a start date and an end date before proceeding.');
+                    }
+                }}
+            >
+                <VisibilityIcon />
+            </Link>
+        </div>
+    )}
+</div>
 
     </div>
   )

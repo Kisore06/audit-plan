@@ -84,3 +84,8 @@ h3 a:hover {
     display: flex;
 }
 
+.date-range{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
