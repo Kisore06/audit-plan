@@ -4,10 +4,14 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/uploads/images', express.static('uploads/images'));
+
 
 
 const db = mysql.createConnection({
@@ -30,6 +34,26 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
+
+// Configure Multer to use the 'uploads' directory and handle multiple files
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/images');
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname); // Use the original file name
+    }
+});
+
+const upload = multer({ storage: storage }).fields([
+    { name: 'image1', maxCount: 1 },
+    { name: 'image2', maxCount: 1 },
+    { name: 'image3', maxCount: 1 },
+    { name: 'image4', maxCount: 1 },
+    { name: 'image5', maxCount: 1 },
+    { name: 'image6', maxCount: 1 },
+    { name: 'image7', maxCount: 1 },
+]);
 
 // Login endpoint with role-based access control
 app.post('/login', async (req, res) => {
@@ -207,21 +231,36 @@ app.get('/audit', (req, res) => {
     });
 });
 
-// Submit audit form data
-app.post('/submit-audit', (req, res) => {
-    const formData = req.body;
-    const questions = formData.questions;
-    const questionFields = questions.map((_, index) => `question_${index + 1}, remark_${index + 1}, comment_${index + 1}`).join(', ');
-    const placeholders = questions.map((_, index) => '?, ?, ?').join(', ');
-    const values = [];
+// Submit audit form data with image uploads
+app.post('/submit-audit', upload, (req, res) => {
+    // Parse the questions array from the request body
+    let formData = req.body;
+    if (typeof formData.questions === 'string') {
+        formData.questions = JSON.parse(formData.questions);
+    }
 
-    values.push(formData.area_name, formData.audit_date, formData.auditor_name, formData.auditor_phone);
-    questions.forEach(q => {
-        values.push(q.question, q.remark, q.comment);
+    // object to store the paths of the uploaded images
+    const imagePaths = {};
+
+    if (req.files) {
+        formData.questions.forEach((q, index) => {
+            const imageFieldName = `image${index + 1}`;
+            if (req.files[imageFieldName] && req.files[imageFieldName].length > 0) {
+                imagePaths[`image${index + 1}`] = req.files[imageFieldName][0].path;
+            }
+        });
+    }
+
+    const questionFields = [];
+    const placeholders = [];
+    formData.questions.forEach((q, index) => {
+        questionFields.push(`question_${index + 1}`, `remark_${index + 1}`, `image_${index + 1}`, `comment_${index + 1}`);
+        placeholders.push('?', '?', '?', '?');
     });
-    values.push(formData.suggestion);
 
-    const query = `INSERT INTO audits (area_name, audit_date, auditor_name, auditor_phone, ${questionFields}, suggestion) VALUES (?, ?, ?, ?, ${placeholders}, ?)`;
+    const query = `INSERT INTO audits (area_name, audit_date, auditor_name, auditor_phone, ${questionFields.join(', ')}, suggestion) VALUES (?, ?, ?, ?, ${placeholders.join(', ')}, ?)`;
+
+    const values = [formData.area_name, formData.audit_date, formData.auditor_name, formData.auditor_phone, ...formData.questions.flatMap((q, index) => [q.question, q.remark, imagePaths[`image${index + 1}`] || null, q.comment]), formData.suggestion];
 
     db.query(query, values, (error, results) => {
         if (error) {
@@ -275,14 +314,14 @@ app.get('/audits/by-date-and-area', (req, res) => {
 
 // Submit audit form data
 app.post('/submit-audit-form', (req, res) => {
-    const { date, taskId, auditArea, specificArea, reportObservation, remarks, taskIdSpecific, actionTaken, progress } = req.body;
+    const { date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress } = req.body;
 
     if (!date || !taskId || !auditArea || !specificArea || !reportObservation || !remarks || !taskIdSpecific || !actionTaken || !progress) {
         return res.status(400).send({ message: 'All fields are required.' });
     }
 
-    const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    const values = [date, taskId, auditArea, specificArea, reportObservation, remarks, taskIdSpecific, actionTaken, progress];
+    const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, suggestions, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const values = [date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress];
 
     db.query(query, values, (error, results) => {
         if (error) {

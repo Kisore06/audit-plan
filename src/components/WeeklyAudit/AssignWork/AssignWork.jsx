@@ -43,10 +43,18 @@ const AssignWork = () => {
         }
     };
     
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+    
 
     return (
         <div style={{ paddingTop: '90px' }}>
-            <h2>Tasks for {startDate} to {endDate}</h2>
+            <h2>Tasks for {formatDate(startDate)} to {formatDate(endDate)}</h2>
             <table className="audit-table">
                 <thead>
                     <tr>
@@ -57,6 +65,7 @@ const AssignWork = () => {
                         <th>Specific Area</th>
                         <th>Report Observation</th>
                         <th>Remarks</th>
+                        <th>Suggestions</th>
                         <th>Specific Task ID</th>
                         <th>action Taken</th>
                         <th>Progress</th>
@@ -66,12 +75,13 @@ const AssignWork = () => {
                 {tasks.map((task, index) => (
                     <tr key={task.task_id_specific}>
                             <td>{index + 1}</td>
-                            <td>{startDate}</td>
+                            <td>{formatDate(task.date)}</td>
                             <td>{task.task_id}</td>
                             <td>{task.audit_area}</td>
                             <td>{task.specific_area}</td>
-                            <td>{task.report_observation}</td>
+                            <td><div dangerouslySetInnerHTML={{ __html: task.report_observation }} /></td>
                             <td>{task.remarks}</td>
+                            <td>{task.suggestions}</td>
                             <td>{task.task_id_specific}</td>
                             <td>{task.action_taken}</td>
                             <td>

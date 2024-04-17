@@ -12,37 +12,44 @@ const AuditForm = () => {
       {
         question: 'Are the rooms/ restrooms are clean and free from dust?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
       {
         question: 'Any damages observed in the furniture?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
       {
         question: 'Are the doors and handles are in good conditions?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
       {
         question: 'Civil complaints?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
       {
         question: 'Carpentry complaints?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
       {
         question: 'electrical complaints?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
       {
         question: 'plumbing complaints?',
         remark: '',
-        comment: ''
+        comment: '',
+        image: null
       },
     ],
     suggestion:''
@@ -81,17 +88,56 @@ const AuditForm = () => {
     setFormData(prevState => ({ ...prevState, suggestion: e.target.value }));
 };
 
- const handleSubmit =async (e) => {
+const handleFileChange = (e, index) => {
+    const file = e.target.files[0]; // Get the first file from the FileList
+    const updatedQuestions = [...formData.questions];
+    updatedQuestions[index].image = file; // Update the image property for the specific question
+    setFormData({ ...formData, questions: updatedQuestions });
+};
+
+
+const handleSubmit = async (e) => {
     e.preventDefault();
+    const formDataToSubmit = new FormData();
+
+    // Append form fields to FormData
+    formDataToSubmit.append('area_name', formData.area_name);
+    formDataToSubmit.append('audit_date', formData.audit_date);
+    formDataToSubmit.append('auditor_name', formData.auditor_name);
+    formDataToSubmit.append('auditor_phone', formData.auditor_phone);
+    formDataToSubmit.append('suggestion', formData.suggestion);
+
+    // Serialize the questions array into a JSON string and append it to FormData
+    formDataToSubmit.append('questions', JSON.stringify(formData.questions));
+
+    // Append images to FormData
+    formData.questions.forEach((question, index) => {
+        if (question.image) {
+            formDataToSubmit.append(`image${index + 1}`, question.image);
+        }
+    });
+
     try {
-        const response = await axios.post('http://localhost:8001/submit-audit', formData);
-        console.log('Form data submitted successfully:', response.data);
+        // Submit the form data
+        const response = await fetch('http://localhost:8001/submit-audit', {
+            method: 'POST',
+            body: formDataToSubmit,
+        });
+
+        // Check if the request was successful
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log('Form data submitted successfully:', data);
         // Optionally, clear the form or show a success message
     } catch (error) {
         console.error('Error submitting form data:', error);
         // Optionally, show an error message
     }
- };
+};
+
 
  return (
     <div style={{ paddingTop: '90px' }}>
@@ -173,6 +219,7 @@ const AuditForm = () => {
 
                         {question.remark === 'bad' && (
                             <div>
+                            <div>
                                 <label className="form-label" htmlFor={`comment${index}`}>Comment:</label>
                                 <textarea
                                     id={`comment${index}`}
@@ -181,6 +228,17 @@ const AuditForm = () => {
                                     className="form-textarea"
                                     onChange={(e) => handleInputChange(e, index)}
                                 />
+                            </div>
+                            <div>
+                            <label>
+                                Image:
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, index)}                                    required 
+                                />
+                            </label>
+                            </div>
                             </div>
                         )}
                     </div>

@@ -13,6 +13,11 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import Modal from '@mui/material/Modal';
+import {Carousel} from 'react-responsive-carousel';
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+
 
 const CheckAudits = () => {
     const { date } = useParams();
@@ -24,9 +29,13 @@ const CheckAudits = () => {
     const [selectedGender, setSelectedGender] = useState('');
     const [selectedReportObservation, setSelectedReportObservation] = useState('');
     const [selectedRemarks, setSelectedRemarks] = useState('');
+    const [selectedSuggestions, setSelectedSuggestions] = useState('');
     const [isFormVisible, setIsFormVisible] = useState(false);
     const formRef = useRef(null);
     const [assignedTaskIds, setAssignedTaskIds] = useState([]);
+    const [imageUrls, setImageUrls] = useState([]);
+    const [openModal, setOpenModal] = useState(false);
+
 
 
     const [formData, setFormData] = useState({
@@ -84,6 +93,7 @@ const CheckAudits = () => {
                 console.error('Error fetching taskId:', error);
             }
         };
+        
 
         fetchAreaNamesAndAudits();
         fetchTaskId();
@@ -184,6 +194,7 @@ const CheckAudits = () => {
                     specificArea: selectedGender,
                     reportObservation: selectedReportObservation,
                     remarks: selectedRemarks,
+                    suggestions: selectedSuggestions,
                     taskIdSpecific: formData.taskIdSpecific,
                     actionTaken: formData.actionTaken,
                     progress: progressValue,
@@ -207,6 +218,31 @@ const CheckAudits = () => {
             console.error('Error submitting data:', error);
         }
     };
+
+    //img view
+    const handleOpenModal = (audit) => {
+        if (!audit) {
+            console.log("Audit data is undefined");
+            setImageUrls([]); // Set to an empty array or handle the error as needed
+            return; // Exit the function early
+        }
+        const baseUrl = 'http://localhost:8001/'; // Adjust this to match your server's base URL
+            const imageUrls = [];
+            for (let i = 1; i <= 7; i++) {
+                const imageKey = `image_${i}`;
+                if (audit[imageKey]) {
+                    const correctedPath = audit[imageKey].replace(/\\/g, '/');
+                    // Construct the full URL and encode it
+                    const encodedUrl = encodeURI(baseUrl + correctedPath);
+                    imageUrls.push(encodedUrl);                }
+            }
+        setImageUrls(imageUrls);
+        setOpenModal(true);
+    };
+    
+    const handleCloseModal = () => {
+        setOpenModal(false);
+    };
  
 
     return (
@@ -224,6 +260,7 @@ const CheckAudits = () => {
                         <th>Specific Area</th>
                         <th>Report Observation</th>
                         <th>Remarks</th>
+                        <th>Suggestions</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -235,6 +272,7 @@ const CheckAudits = () => {
                             const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
                             const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
                             const isBadRemark = remarksString.split(',').some(remark => remark.trim() === 'bad');
+                            const suggestions = auditData ? auditData.suggestion || 'Nil' : 'Nil';
 
                             return (
                                 <tr key={`${areaName}-${gender}`}>
@@ -243,8 +281,10 @@ const CheckAudits = () => {
                                     <td>{gender}</td>
                                     <td className="report-observation" dangerouslySetInnerHTML={{ __html: reportObservation }}></td>
                                     <td><input type="text" value={remarksString} onChange={(e) => handleCellChange(e, areaName, gender, 'remarks')} /></td>
+                                    <td>{suggestions}</td>
                                     <td>
-                                    {isBadRemark && ( // Only render the IconButton if isBadRemark is true
+                                    {isBadRemark && ( 
+                                        <div>
                                         <IconButton
                                             size="small"
                                             onClick={(event) => {
@@ -252,11 +292,39 @@ const CheckAudits = () => {
                                                 setSelectedGender(gender);
                                                 setSelectedReportObservation(determineReportObservation(auditData));
                                                 setSelectedRemarks(remarksString);
+                                                setSelectedSuggestions(suggestions);
                                                 setIsFormVisible(true);
                                             }}
                                         >
                                             <EditIcon />
                                         </IconButton>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                handleOpenModal(auditData);
+                                                setOpenModal(true);
+                                            }}
+                                        >
+                                            <VisibilityIcon />
+                                        </IconButton>
+
+                                        <Modal
+                                            open={openModal}
+                                            onClose={handleCloseModal}
+                                            aria-labelledby="modal-title"
+                                            aria-describedby="modal-description"
+                                        >
+                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'white', padding: '20px' }}>
+                                            <Carousel>
+                                            
+                                                {imageUrls.map((url, index) => (
+                                                    <img key={index} src={url} alt={`Slide ${index + 1}`} />
+                                                ))}
+                                            </Carousel>
+
+                                            </div>
+                                        </Modal>
+                                        </div>
                                     )}
 
                                     </td>
