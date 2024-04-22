@@ -12,14 +12,14 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('http://localhost:8001/login', { username, password });
+            const response = await axios.post('http://192.168.137.108:8001/login', { username, password });
             console.log(response.data);
             const { role } = response.data;
 
             if (role === 'admin') {
-                navigate('/admin-register');
-            } else if (role === 'user') {
                 navigate('/week');
+            } else if (role === 'user') {
+                navigate('/audit');
             } else {
                 console.error('Unknown role:', role);
             }

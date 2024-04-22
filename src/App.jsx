@@ -4,14 +4,14 @@ import Header from './components/Header/Header';
 import Audit from './components/WeeklyAudit/Audit';
 import AuditView from './components/WeeklyAudit/Auditview';
 import WeeklyAudit from './components/WeeklyAudit/WeeklyAudit';
-import {Route, Routes} from "react-router-dom";
+import {Route, Routes, useLocation} from "react-router-dom";
 import Login from './components/Login/Login';
 import AdminRegistration from './components/Admin/Admin';
 import CheckAudits from './components/WeeklyAudit/CheckAudit/CheckAudits';
 import AssignWork from './components/WeeklyAudit/AssignWork/AssignWork';
 
 function App() {
-//  const location = useLocation();
+ const location = useLocation();
 
  return (
     <div>
@@ -26,8 +26,7 @@ function App() {
         <Route path="/checkAudits/:date" element={<CheckAudits />} />
         <Route path="/assignWork/:startDate/:endDate" element={<AssignWork />} />
       </Routes>
-      {/* {location.pathname !== '/' && <Footer/>} */}
-      <Footer/>
+      {location.pathname !== '/' && <Footer/>}
     </div>
  );
 }

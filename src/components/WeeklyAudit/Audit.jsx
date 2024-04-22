@@ -40,13 +40,13 @@ const AuditForm = () => {
         image: null
       },
       {
-        question: 'electrical complaints?',
+        question: 'Electrical complaints?',
         remark: '',
         comment: '',
         image: null
       },
       {
-        question: 'plumbing complaints?',
+        question: 'Plumbing complaints?',
         remark: '',
         comment: '',
         image: null
@@ -63,8 +63,7 @@ const AuditForm = () => {
 
  const fetchAreaName = async () => {
     try {
-      const response = await axios.get('http://localhost:8001/remote_area_weekly');
-      console.log({response});
+      const response = await axios.get('http://192.168.137.108:8001/remote_area_weekly');
       setArea(response.data);
     } catch (error) {
       console.error('Error fetching area name:', error);
@@ -89,9 +88,9 @@ const AuditForm = () => {
 };
 
 const handleFileChange = (e, index) => {
-    const file = e.target.files[0]; // Get the first file from the FileList
+    const file = e.target.files[0]; 
     const updatedQuestions = [...formData.questions];
-    updatedQuestions[index].image = file; // Update the image property for the specific question
+    updatedQuestions[index].image = file; 
     setFormData({ ...formData, questions: updatedQuestions });
 };
 
@@ -100,17 +99,14 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     const formDataToSubmit = new FormData();
 
-    // Append form fields to FormData
     formDataToSubmit.append('area_name', formData.area_name);
     formDataToSubmit.append('audit_date', formData.audit_date);
     formDataToSubmit.append('auditor_name', formData.auditor_name);
     formDataToSubmit.append('auditor_phone', formData.auditor_phone);
     formDataToSubmit.append('suggestion', formData.suggestion);
 
-    // Serialize the questions array into a JSON string and append it to FormData
     formDataToSubmit.append('questions', JSON.stringify(formData.questions));
 
-    // Append images to FormData
     formData.questions.forEach((question, index) => {
         if (question.image) {
             formDataToSubmit.append(`image${index + 1}`, question.image);
@@ -118,23 +114,20 @@ const handleSubmit = async (e) => {
     });
 
     try {
-        // Submit the form data
-        const response = await fetch('http://localhost:8001/submit-audit', {
+        const response = await fetch('http://192.168.137.108:8001/submit-audit', {
             method: 'POST',
             body: formDataToSubmit,
         });
 
-        // Check if the request was successful
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
 
         const data = await response.json();
         console.log('Form data submitted successfully:', data);
-        // Optionally, clear the form or show a success message
+        window.location.reload();
     } catch (error) {
         console.error('Error submitting form data:', error);
-        // Optionally, show an error message
     }
 };
 
@@ -155,8 +148,8 @@ const handleSubmit = async (e) => {
                         className="form-select"
                     >
                         <option value="">Select Area</option>
-                        {area.map((area) => (
-                            <option key={area.s_no} value={area.area_gender}>
+                        {area.map((area, index) => (
+                            <option key={index} value={area.area_gender}>
                                 {area.area_gender}
                             </option>
                         ))}
@@ -235,6 +228,7 @@ const handleSubmit = async (e) => {
                                 <input
                                     type="file"
                                     accept="image/*"
+                                    capture="environment"
                                     onChange={(e) => handleFileChange(e, index)}                                    required 
                                 />
                             </label>

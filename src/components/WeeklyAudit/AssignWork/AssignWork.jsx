@@ -9,7 +9,7 @@ const AssignWork = () => {
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const response = await fetch(`http://localhost:8001/fetchTasks?startDate=${startDate}&endDate=${endDate}`);
+                const response = await fetch(`http://192.168.137.108:8001/fetchTasks?startDate=${startDate}&endDate=${endDate}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch tasks');
                 }
@@ -25,7 +25,7 @@ const AssignWork = () => {
 
     const handleProgressUpdate = async (taskId, newProgress) => {
         try {
-            const response = await fetch(`http://localhost:8001/updateTaskProgress?taskId=${taskId}&newProgress=${newProgress}`, {
+            const response = await fetch(`http://192.168.137.108:8001/updateTaskProgress?taskId=${taskId}&newProgress=${newProgress}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -53,8 +53,8 @@ const AssignWork = () => {
     
 
     return (
-        <div style={{ paddingTop: '90px' }}>
-            <h2>Tasks for {formatDate(startDate)} to {formatDate(endDate)}</h2>
+        <div style={{ paddingTop: '90px', overflow: 'auto' }}>
+        <h2>Tasks for {formatDate(startDate)} to {formatDate(endDate)}</h2>
             <table className="audit-table">
                 <thead>
                     <tr>

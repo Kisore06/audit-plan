@@ -4,7 +4,7 @@ import './Admin.css'; // Import the CSS file
 
 const fetchRoles = async () => {
     try {
-        const response = await axios.get('http://localhost:8001/roles');
+        const response = await axios.get('http://192.168.137.108:8001/roles');
         return response.data;
     } catch (error) {
         console.error('Error fetching roles:', error);
@@ -25,7 +25,7 @@ const AdminRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8001/register', { username, password, roleId});
+            const response = await axios.post('http://192.168.137.108:8001/register', { username, password, roleId});
             console.log(response.data);
         } catch (error) {
             console.error(error);
