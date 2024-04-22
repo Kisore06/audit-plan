@@ -116,7 +116,7 @@ app.post('/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Error:', error);
-        res.status(500).send({ message: 'Internal server error' });
+        res.status(500).send({ message: 'Internal server error' });
  }
 });
 
@@ -207,6 +207,20 @@ app.get('/getTaskIdByDate', (req, res) => {
     });
 });
 
+// remote-area-weekly
+app.get('/remote_area_weekly', (req, res) => {
+    console.log('vanthuten...')
+ const query= 'SELECT * FROM remote_area_weekly'
+ db.query(query, (error, results) => {
+    if (error) {
+        console.error('code la prblm...')
+        res.status(500).send('code la prblm...');
+    }else {
+        console.log('vanthuten nu sollu...');
+        res.send(results);
+    }
+ });
+});
 
 // audit-form
 app.get('/audit', (req, res) => {
@@ -397,3 +411,4 @@ const PORT = process.env.PORT || 8001;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+

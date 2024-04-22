@@ -1,0 +1,24 @@
+.sidebar-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+   }
+   
+   .hide-icon {
+    display: none;
+   }
+   
+   .drawer-header {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    justify-content: flex-end;
+   }
+   
+   .sidebar-nav .MuiIconButton-root {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+   }
+  

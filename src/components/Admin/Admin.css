@@ -1,22 +1,17 @@
 /* AdminRegistration.css */
 
-.admin-registration-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+/* Form container */
+.admin-registration-form-container {
+    width: 80%;
+    max-width: 400px;
+    margin: auto;
     background-color: #f8f9fa;
-}
-
-.admin-registration-form {
-    width: 300px;
-    padding: 20px;
-    background-color: #ffffff;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
 }
 
-.admin-registration-form h2 {
+/* Form title */
+.admin-registration-form-container h2 {
     text-align: center;
     margin-bottom: 20px;
     color: #343a40;
@@ -24,27 +19,29 @@
     font-weight: bold;
 }
 
-.admin-registration-form label {
+/* Form inputs and labels */
+.admin-registration-form-container label {
     display: block;
-    margin-bottom: 5px;
-    color: #343a40;
-    font-size: 14px;
+    margin-bottom: 8px;
+    color: #495057;
+    font-size: 16px;
 }
 
-.admin-registration-form input[type="text"],
-.admin-registration-form input[type="password"],
-.admin-registration-form select {
+.admin-registration-form-container input[type="text"],
+.admin-registration-form-container input[type="password"],
+.admin-registration-form-container select {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-bottom: 20px;
     border: 1px solid #ced4da;
     border-radius: 4px;
     font-size: 16px;
 }
 
-.admin-registration-form button[type="submit"] {
+/* Form submit button */
+.admin-registration-form-container button[type="submit"] {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background-color: #007bff;
     color: white;
     border: none;
@@ -54,6 +51,185 @@
     transition: background-color 0.3s ease;
 }
 
-.admin-registration-form button[type="submit"]:hover {
+.admin-registration-form-container button[type="submit"]:hover {
     background-color: #0056b3;
 }
+
+/* Link button */
+.admin-registration-form-container .view-button {
+    display: block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #59fcf4;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.admin-registration-form-container .view-button:hover {
+    background-color: #7fff3f;
+}
+
+/* Error message */
+.admin-registration-form-container .error-message {
+    color: #ff5454;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+
+/* AdminRegistration.css */
+
+/* Existing styles */
+
+.button-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+.action-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.action-button:hover {
+    background-color: #0056b3;
+}
+
+.date-view-audit {
+    margin-left: 20px;
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+}
+
+.view-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-button i {
+    font-size: 16px;
+}
+
+/* Additional styles for the date input */
+.date-input {
+    padding: 5px;
+    margin-left: 20px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* Ensure the link looks like a button */
+.view-button {
+    text-decoration: none; /* Remove underline from the link */
+    color: #007bff; /* Match the color with the action button */
+    transition: color 0.3s ease;
+}
+
+.view-button:hover {
+    color: #9fccfd; /* Darken the color on hover */
+}
+
+/* Admin.css */
+
+.card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.action-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+}
+
+.action-button:hover {
+    background-color: #0056b3;
+}
+
+.view-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #59fcf4;
+    color: #fff;
+    cursor: pointer;
+}
+
+.view-button:hover {
+    background-color: #218838;
+}
+
+.assign-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ff5454;
+    color: #fff;
+    cursor: pointer;
+}
+
+.assign-button:hover {
+    background-color: #7afa34;
+}
+
+/* Admin.css */
+
+.flex-container {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    gap: 20px;
+    align-items: center;
+    margin-top: 100px;
+    flex-direction: row; /* Adds space between the items */
+}
+
