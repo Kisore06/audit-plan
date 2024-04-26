@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const puppeteer = require('puppeteer');
 
 
 const app = express();
@@ -138,6 +139,59 @@ app.get('/roles', (req, res) => {
             res.status(500).send('problem in users...');
         }else {
             console.log('Fetched user roles');
+            res.send(results);
+        }  
+    });
+});
+
+// Middleware to verify the JWT token and add the user's ID to the request object
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+    if (!token) {
+        return res.status(403).send({ message: 'No token provided' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key');
+        req.userId = decoded.id;
+        next();
+    } catch (error) {
+        return res.status(401).send({ message: 'Unauthorized' });
+    }
+};
+
+// Endpoint to fetch the details of the currently logged-in user
+app.get('/users/me', verifyToken, (req, res) => {
+    const query = 'SELECT * FROM users WHERE id = ?';
+    db.query(query, [req.userId], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else if (results.length === 0) {
+            res.status(404).send({ message: 'User not found' });
+        } else {
+            const user = results[0];
+            res.send({
+                id: user.id,
+                username: user.username,
+                role: user.role, // Assuming 'role' is the column name for the user's role
+                // Add any other user details you want to return
+            });
+        }
+    });
+});
+
+
+//users
+app.get('/users', (req, res) => {
+    console.log('fetching user details')
+    const query = 'SELECT * FROM users'
+    db.query(query,(error,results)=>{
+        if (error) {
+            console.error('problem in user details...')
+            res.status(500).send('problem in user details...');
+        }else {
+            console.log('Fetched user details');
             res.send(results);
         }  
     });
@@ -416,7 +470,117 @@ app.post('/updateTaskProgress', (req, res) => {
     });
 });
 
+//puppeter pdf download
+app.post('/generate-pdf', async (req, res) => {
+    try {
+        const { totalAreasCovered, totalObservationsFound, date, taskId, auditsData } = req.body;
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
 
+        const areaCounts = {};
+        auditsData.forEach(item => {
+            if (!areaCounts[item.AuditArea]) {
+                areaCounts[item.AuditArea] = 1;
+            } else {
+                areaCounts[item.AuditArea]++;
+            }
+        });
+
+        // Generate the HTML template with rowspan logic
+        let htmlContent = `
+            <html>
+            <head>
+                <title>Report</title>
+                <style>
+                    table {
+                        border-collapse: collapse;
+                        width: 100%;
+                    }
+                    th, td {
+                        border: 1px solid black;
+                        padding: 8px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                </style>
+            </head>
+            <body>
+            <h2 style="text-align:center">Office of the IQAC</h2>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>Audit Date: ${date}</div>
+                <div>Task ID: ${taskId}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>Total Areas Covered: ${totalAreasCovered}</div>
+                <div>Total Observations Found: ${totalObservationsFound}</div>
+            </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Audit Area</th>
+                            <th>Specific Area</th>
+                            <th>Report Observation</th>
+                            <th>Remarks</th>
+                            <th>Suggestions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        auditsData.forEach((item, index) => {
+            // Check if this is the first item of a new area
+            if (index === 0 || item.AuditArea !== auditsData[index - 1].AuditArea) {
+                // Apply rowspan to the area name and serial number cells
+                htmlContent += `
+                    <tr>
+                        <td rowSpan="${areaCounts[item.AuditArea]}">${item.SerialNumber}</td>
+                        <td rowSpan="${areaCounts[item.AuditArea]}">${item.AuditArea}</td>
+                        <td>${item.SpecificArea}</td>
+                        <td>${item.ReportObservation}</td>
+                        <td>${item.Remarks}</td>
+                        <td>${item.Suggestions}</td>
+                    </tr>
+                `;
+            } else {
+                // For subsequent items of the same area, only add the specific area, report observation, remarks, and suggestions
+                // Since we're assuming each area has two entries (male and female), we don't need to adjust the rowspan here
+                htmlContent += `
+                    <tr>
+                        <td>${item.SpecificArea}</td>
+                        <td>${item.ReportObservation}</td>
+                        <td>${item.Remarks}</td>
+                        <td>${item.Suggestions}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        htmlContent += `
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        await page.setContent(htmlContent);
+        const pdf = await page.pdf({ format: 'A4', landscape: true });
+
+        await browser.close();
+
+        // Send the PDF back to the client
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Length': pdf.length,
+        });
+        res.send(pdf);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).send('Error generating PDF');
+    }
+});
 
 
 // Start the server

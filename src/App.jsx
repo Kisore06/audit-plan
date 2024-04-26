@@ -1,10 +1,11 @@
 import './App.css';
+import React, { useEffect } from 'react';
 import Footer from './components/Footer/Footer';
 import Header from './components/Header/Header';
 import Audit from './components/WeeklyAudit/Audit';
 import AuditView from './components/WeeklyAudit/Auditview';
 import WeeklyAudit from './components/WeeklyAudit/WeeklyAudit';
-import {Route, Routes, useLocation} from "react-router-dom";
+import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import Login from './components/Login/Login';
 import AdminRegistration from './components/Admin/Admin';
 import CheckAudits from './components/WeeklyAudit/CheckAudit/CheckAudits';
@@ -13,6 +14,23 @@ import { ToastContainer } from 'react-toastify';
 
 function App() {
  const location = useLocation();
+ const navigate = useNavigate();
+
+    useEffect(() => {
+        const checkSessionExpiry = () => {
+            const loginTime = localStorage.getItem('loginTime');
+            const sessionTimeout = 6 * 60 * 60 * 1000;
+
+            if (!loginTime || Date.now() - loginTime > sessionTimeout) {
+                localStorage.removeItem('role');
+                localStorage.removeItem('loginTime');
+                navigate('/');
+            }
+        };
+
+        checkSessionExpiry();
+
+    }, [navigate]);
 
  return (
     <div>

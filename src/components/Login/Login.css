@@ -1,6 +1,7 @@
 /* Login.css */
 .total-login-page {
     height: 100vh;
+<<<<<<< HEAD
     width: 100%;
     background-color: rgb(255, 255, 255);
     display: flex;
@@ -42,6 +43,47 @@
    }
    
    .login-form {
+=======
+    background-color: #f8f9fa;
+}
+
+/* Form elements */
+.login-form {
+    width: 300px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #343a40;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #343a40;
+    font-size: 14px;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: 93%;
+    padding: 10px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.login-form button[type="submit"] {
+>>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
     width: 100%;
    }
    

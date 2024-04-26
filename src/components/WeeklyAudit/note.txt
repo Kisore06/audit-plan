@@ -1,102 +1,144 @@
- { serialNumber: 1, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 2, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 3, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 4, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 5, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 6, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 7, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 8, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 9, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 10, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 11, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 12, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
+function exportTableToCSV(data) {
+        const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
+        const header = Object.keys(data[0]);
+        let csv = [];
+        let lastSerialNumber = '';
+    
+        data.forEach((row, index) => {
+            // Prepare the row data
+            const values = header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',');
+            // Check if the current row's SerialNumber is the same as the last one
+            if (row.SerialNumber !== lastSerialNumber) {
+                // If not, add the row as is
+                csv.push(values);
+            } else {
+                // If it is, modify the CSV line to merge cells
+                // This involves removing the SerialNumber from the CSV line
+                const valuesWithoutSerialNumber = values.split(',').slice(1).join(',');
+                csv.push(',' + valuesWithoutSerialNumber); // Add a comma at the beginning to align with the header
+            }
+            lastSerialNumber = row.SerialNumber;
+        });
+    
+        csv.unshift(header.join(','));
+        csv = csv.join('\r\n');
+    
+        // Create a Blob from the CSV string
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    
+        // Create a link element
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'audit_data.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
 
 
-        <td><input type="date" value={audit.auditDate} onChange={(e) => handleCellChange(e, index, 'auditDate')} /></td>
-                            <td><input type="text" value={audit.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')} /></td>
 
 
-import React, { useState, useEffect } from 'react';
-import './CheckAudits.css'; 
+    const handleExport = () => {
+        // Assuming `processedAuditsData` is your data source
+        const dataToExport = Object.entries(processedAuditsData).map(([areaName, areaGenders]) => {
+            return Object.entries(areaGenders).map(([gender, audits]) => {
+                // Find the auditData for the current gender
+                const auditData = auditsData.find(audit => audit.area_name === gender);
+    
+                // Safely access properties of auditData
+                const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
+                const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
+                const suggestions = auditData ? auditData.suggestion || 'Nil' : 'Nil';
+    
+                return {
+                    SerialNumber: serialNumbers[areaName],
+                    AuditArea: areaName,
+                    SpecificArea: gender,
+                    ReportObservation: reportObservation,
+                    Remarks: remarksString,
+                    Suggestions: suggestions,
+                    // Add any other fields you need
+                };
+            });
+        }).flat(); // Flatten the array to get a single array of objects
+    
+        // exportTableToCSV(dataToExport);
+    const doc = new jsPDF("l", "mm", "legal");
 
-const CheckAudits = () => {
-    const [audits, setAudits] = useState([
-        { serialNumber: 1, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 2, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 3, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 4, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 5, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 6, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 7, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 8, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 9, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 10, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 11, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-        { serialNumber: 12, auditDate: '', taskId: '', auditArea: '', reportObservation: '', remarks: '' },
-    ]);
-    const [areaNames, setAreaNames] = useState([]);
+    // Define the columns for the table
+    const columns = ["SerialNumber", "AuditArea", "SpecificArea", "ReportObservation", "Remarks", "Suggestions"];
 
-    // Fetch area names from the backend
-    const fetchAreaNames = async () => {
-        try {
-            const response = await fetch('http://localhost:8001/remote_area_weekly');
-            const data = await response.json();
-            return data.map(item => item.area);
-        } catch (error) {
-            console.error('Error fetching area names:', error);
-            return [];
-        }
-    };
+    // Initialize variables to track the last serial number and area name
+    let lastSerialNumber = '';
+    let lastAuditArea = '';
 
-    useEffect(() => {
-        const getAreaNames = async () => {
-            const names = await fetchAreaNames();
-            // Deduplicate area names for non repeat
-            const uniqueNames = [...new Set(names)];
-            setAreaNames(uniqueNames);
-        };
+    // Prepare the body of the table
+    const body = dataToExport.map(item => {
+        const row = [
+            item.SerialNumber !== lastSerialNumber ? item.SerialNumber : '',
+            item.AuditArea !== lastAuditArea ? item.AuditArea : '',
+            item.SpecificArea,
+            item.ReportObservation,
+            item.Remarks,
+            item.Suggestions
+        ];
 
-        getAreaNames();
-    }, []);
+        // Update the last serial number and area name
+        lastSerialNumber = item.SerialNumber;
+        lastAuditArea = item.AuditArea;
 
-    // Function to handle changes in the table cells
-    const handleCellChange = (e, rowIndex, columnId) => {
-        const newAudits = [...audits];
-        newAudits[rowIndex][columnId] = e.target.value;
-        setAudits(newAudits);
-    };
+        return row;
+    });
 
-    return (
-        <div style={{ paddingTop: '90px' }}>
-            <h2>Check Audits</h2>
-            <table className="audit-table">
-                <thead>
-                    <tr>
-                        <th>Serial Number</th>
-                        <th>Audit Date</th>
-                        <th>Task ID</th>
-                        <th>Audit Area</th>
-                        <th>Report Observation</th>
-                        <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {audits.map((audit, index) => (
-                        <tr key={index}>
-                            <td>{index + 1}</td>
-                            {index === 0 && <td rowSpan={audits.length}><input type="date" value={audit.auditDate} onChange={(e) => handleCellChange(e, index, 'auditDate')}/></td>}
-                            {index === 0 && <td rowSpan={audits.length}><input type="text" value={audit.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')}/></td>}
-                            <td>
-                                {audit.auditArea || areaNames[index % areaNames.length]}
-                            </td>
-                            <td><input type="text" value={audit.reportObservation} onChange={(e) => handleCellChange(e, index, 'reportObservation')} /></td>
-                            <td><input type="text" value={audit.remarks} onChange={(e) => handleCellChange(e, index, 'remarks')} /></td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-};
-
-export default CheckAudits;
+    // Add the table to the PDF and landscape 
+    doc.autoTable({
+        head: [columns],
+        body: body,
+    
+        // Enable cell merging and adjust styles
+        didDrawCell: (data) => {
+            if (data.section === 'body') {
+                const col = data.column.index;
+                const row = data.row.index;
+                if (col === 0 || col === 1) {
+                    const prevRow = body[row - 1];
+                    if (prevRow && (prevRow[col] === data.cell.text || prevRow[col] === '')) {
+                        // Check if the cell is part of a merged cell
+                        if (data.cell.raw === '' || data.cell.raw === prevRow[col]) {
+                            // Remove the border for merged cells
+                            data.cell.styles.lineWidth = 0;
+                            // Center the content of merged cells
+                            data.cell.styles.halign = 'center';
+                            data.cell.styles.valign = 'middle';
+                        } else {
+                            // Apply the border for non-merged cells
+                            data.cell.styles.lineWidth = 0.1;
+                            data.cell.styles.lineColor = [0, 0, 0];
+                            // Ensure non-merged cells are centered
+                            data.cell.styles.halign = 'center';
+                            data.cell.styles.valign = 'middle';
+                        }
+                        data.cell.styles.fillColor = [255, 255, 255]; // Make the cell white to merge with the previous one
+                        data.cell.styles.textColor = [0, 0, 0]; // Set the text color to black
+                    }
+                }
+            }
+        },
+        // Add border lines to the table
+        styles: {
+            lineWidth: 0.1, // Adjust the border line width
+            lineColor: [0, 0, 0], // Set the border line color to black
+            halign: 'center', // Center the text horizontally
+            valign: 'middle' // Center the text vertically
+        },
+        // Adjust the margin for landscape mode
+        margin: { top: 20, left: 10, right: 10, bottom: 20 }
+    });
+    
+    // Save the PDF
+    doc.save('audit_data.pdf');
+    
+}

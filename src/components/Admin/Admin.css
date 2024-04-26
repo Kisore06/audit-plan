@@ -27,9 +27,22 @@
     font-size: 16px;
 }
 
+<<<<<<< HEAD
 .admin-registration-form-container input[type="text"],
 .admin-registration-form-container input[type="password"],
 .admin-registration-form-container select {
+=======
+.admin-registration-form input[type="text"],
+.admin-registration-form input[type="password"] {
+    width: 93%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+}
+.admin-registration-form select {
+>>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
     width: 100%;
     padding: 12px;
     margin-bottom: 20px;

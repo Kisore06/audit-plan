@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+<<<<<<< HEAD
 import './Admin.css';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link } from 'react-router-dom';
@@ -15,17 +16,44 @@ import { Link } from 'react-router-dom';
 //         return [];
 //     }
 // };
+=======
+import './Admin.css'; 
+import{useNavigate} from 'react-router-dom';
+import api from "../../utils/api"
+
+const fetchRoles = async () => {
+    try {
+        const response = await axios.get(`${api}/roles`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        return [];
+    }
+};
+>>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
 
 const AdminRegistration = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [roleId, setRoleId] = useState('');
     const [role, setRole] = useState([]);
+<<<<<<< HEAD
     // const [showSubLines, setShowSubLines] = useState(false);
     const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
     const [selectedDateForTask, setSelectedDateForTask] = useState('');
     const [taskIdForTask, setTaskIdForTask] = useState('');
     const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
+=======
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const userRole = localStorage.getItem('role');
+        console.log(userRole)
+        if ( userRole !== 'admin') {
+            navigate('/');
+        }
+    }, [navigate]);
+>>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
 
     useEffect(() => {
         fetchRoles().then(setRole);
@@ -44,10 +72,14 @@ const AdminRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+<<<<<<< HEAD
 // <<<<<<< HEAD
 //             const response = await axios.post('http://localhost:8001/register', { username, password, roleId });
 // =======
             const response = await axios.post('http://localhost:8001/register', { username, password, roleId});
+=======
+            const response = await axios.post(`${api}/register`, { username, password, roleId});
+>>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
             console.log(response.data);
         } catch (error) {
             console.error(error);

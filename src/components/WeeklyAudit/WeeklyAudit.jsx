@@ -1,9 +1,11 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import './WeeklyAudit.css' 
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import api from "../../utils/api";
 
 const WeeklyAudit = () => {
+    const navigate = useNavigate();
     const [showSubLines, setShowSubLines] = useState(false);
     const [selectedDates, setSelectedDates] = useState('');
     const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
@@ -11,8 +13,14 @@ const WeeklyAudit = () => {
     const [taskIdForTask, setTaskIdForTask] = useState('');
     const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
 
+    useEffect(() => {
+        const userRole = localStorage.getItem('role');
+        if ( userRole !== 'admin') {
+            navigate('/');
+        }
+        
+    }, [navigate]);
 
-    
     const toggleSubLines = (title) => {
         setShowSubLines(prevState => ({
           ...prevState,
@@ -32,7 +40,6 @@ const WeeklyAudit = () => {
     };
 
     const handleView = (area, date) => {
-        // Construct the URL for navigation
         const url = `/audit/${area}/${date}`;
         return <Link to={url}><VisibilityIcon/></Link>;
     };
@@ -53,7 +60,11 @@ const WeeklyAudit = () => {
       }
   
       try {
+<<<<<<< HEAD
           const response = await fetch(`http://localhost:8001/assignTask`, {
+=======
+          const response = await fetch(`${api}/assignTask`, {
+>>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -66,7 +77,6 @@ const WeeklyAudit = () => {
             throw new Error(errorData.message || 'Failed to assign task.');          }
   
           alert('Task assigned successfully.');
-          // Optionally, clear the input fields after successful assignment
           setSelectedDateForTask('');
           setTaskIdForTask('');
       } catch (error) {
