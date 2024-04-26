@@ -1,18 +1,18 @@
 import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import { Route, Navigate } from 'react-router-dom';
 
-const ProtectedRoute = ({ component: Component, ...rest }) => {
-    // Check if the user is authenticated by looking for a token in localStorage
+const ProtectedRoute = ({ component: Component, requiredRole, ...rest }) => {
     const isAuthenticated = localStorage.getItem('token') !== null;
+    const userRole = localStorage.getItem('role');
 
     return (
         <Route
             {...rest}
             render={(props) =>
-                isAuthenticated ? (
+                isAuthenticated && (requiredRole ? userRole === requiredRole : true) ? (
                     <Component {...props} />
                 ) : (
-                    <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
+                    <Navigate to={{ pathname: '/login', state: { from: props.location } }} />
                 )
             }
         />

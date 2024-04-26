@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './Admin.css'; // Import the CSS file
+import './Admin.css'; 
+import{useNavigate} from 'react-router-dom';
+import api from "../../utils/api"
 
 const fetchRoles = async () => {
     try {
-        const response = await axios.get('http://192.168.137.108:8001/roles');
+        const response = await axios.get(`${api}/roles`);
         return response.data;
     } catch (error) {
         console.error('Error fetching roles:', error);
@@ -17,6 +19,15 @@ const AdminRegistration = () => {
     const [password, setPassword] = useState('');
     const [roleId, setRoleId] = useState('');
     const [role, setRole] = useState([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const userRole = localStorage.getItem('role');
+        console.log(userRole)
+        if ( userRole !== 'admin') {
+            navigate('/');
+        }
+    }, [navigate]);
 
     useEffect(() => {
         fetchRoles().then(setRole);
@@ -25,7 +36,7 @@ const AdminRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://192.168.137.108:8001/register', { username, password, roleId});
+            const response = await axios.post(`${api}/register`, { username, password, roleId});
             console.log(response.data);
         } catch (error) {
             console.error(error);

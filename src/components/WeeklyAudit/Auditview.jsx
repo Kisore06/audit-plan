@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './Auditview.css';
 import IconButton from '@mui/material/IconButton';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Modal from '@mui/material/Modal';
 import {Carousel} from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
+import api from "../../utils/api"
 
 
 const AuditView = () => {
@@ -17,6 +18,16 @@ const AuditView = () => {
     const [imageUrls, setImageUrls] = useState([]);
     const [openModal, setOpenModal] = useState(false);
 
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const userRole = localStorage.getItem('role');
+        if ( userRole !== 'admin') {
+            navigate('/');
+        }
+
+    }, [navigate]);
+
     useEffect(() => {
         const fetchAuditData = async () => {
             if (!area || !date) {
@@ -24,7 +35,7 @@ const AuditView = () => {
                 return; 
             }
             try {
-                const response = await axios.get(`http://192.168.137.108:8001/audit?areaName=${encodeURIComponent(area)}&auditDate=${encodeURIComponent(date)}`);
+                const response = await axios.get(`${api}/audit?areaName=${encodeURIComponent(area)}&auditDate=${encodeURIComponent(date)}`);
                 console.log(response.data);
                 setAuditData(response.data);
             } catch (error) {
@@ -52,7 +63,7 @@ const AuditView = () => {
             setImageUrls([]); 
             return; 
         }
-        const baseUrl = 'http://192.168.137.108:8001/'; 
+        const baseUrl = `${api}/`; 
         const imageKey = `image_${questionIndex}`;
         if (audit[imageKey]) {
             const correctedPath = audit[imageKey].replace(/\\/g, '/');

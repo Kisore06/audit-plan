@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-
+import { useParams, useNavigate } from 'react-router-dom';
+import api from "../../../utils/api"
 
 const AssignWork = () => {
     const { startDate, endDate } = useParams();
     const [tasks, setTasks] = useState([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const userRole = localStorage.getItem('role');
+        if ( userRole !== 'admin') {
+            navigate('/');
+        }
+
+    }, [navigate]);
 
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const response = await fetch(`http://192.168.137.108:8001/fetchTasks?startDate=${startDate}&endDate=${endDate}`);
+                const response = await fetch(`${api}/fetchTasks?startDate=${startDate}&endDate=${endDate}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch tasks');
                 }
@@ -24,8 +33,12 @@ const AssignWork = () => {
     }, [startDate, endDate]);
 
     const handleProgressUpdate = async (taskId, newProgress) => {
+        const confirmUpdate = window.confirm(`Are you sure you want to update the progress to ${newProgress}?`);
+        if (!confirmUpdate) {
+            return;
+        }
         try {
-            const response = await fetch(`http://192.168.137.108:8001/updateTaskProgress?taskId=${taskId}&newProgress=${newProgress}`, {
+            const response = await fetch(`${api}/updateTaskProgress?taskId=${taskId}&newProgress=${newProgress}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -51,10 +64,19 @@ const AssignWork = () => {
         return `${day}-${month}-${year}`;
     };
     
+    const completedTasksCount = tasks.filter(task => task.progress === 'Completed').length;
+    const pendingTasksCount = tasks.filter(task => task.progress === 'In Progress').length;
+    const TasksCount = tasks.filter(task => task.task_id_specific).length;
+
 
     return (
         <div style={{ paddingTop: '90px', overflow: 'auto' }}>
         <h2>Tasks for {formatDate(startDate)} to {formatDate(endDate)}</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div>Number of Tasks: {TasksCount}</div>
+            <div>Completed Tasks: {completedTasksCount}</div>
+            <div>Pending Tasks: {pendingTasksCount}</div>
+        </div>
             <table className="audit-table">
                 <thead>
                     <tr>

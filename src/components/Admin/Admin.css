@@ -32,7 +32,14 @@
 }
 
 .admin-registration-form input[type="text"],
-.admin-registration-form input[type="password"],
+.admin-registration-form input[type="password"] {
+    width: 93%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+}
 .admin-registration-form select {
     width: 100%;
     padding: 10px;

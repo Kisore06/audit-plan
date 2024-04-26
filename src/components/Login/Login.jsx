@@ -1,32 +1,55 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // Import the CSS file
+import './Login.css'; 
+import api from "../../utils/api"
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [userRole, setUserRole] = useState(null);
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        try {
-            const response = await axios.post('http://192.168.137.108:8001/login', { username, password });
-            console.log(response.data);
-            const { role } = response.data;
+        setError(''); 
 
+        if (username.length < 3 || password.length < 3) {
+            setError('Username must be at least 3 characters long, and password must be at least 3 characters long.');
+            return;
+        }
+
+        try {
+            const response = await axios.post(`${api}/login`, { username, password });
+            console.log(response.data);
+            const { role, token } = response.data;
+            setUserRole(role);
+            localStorage.setItem('username', username);
+            localStorage.setItem('role', role);
+            localStorage.setItem('userToken', token);
+            localStorage.setItem('loginTime', Date.now());
+            
             if (role === 'admin') {
                 navigate('/week');
+                window.location.reload();
             } else if (role === 'user') {
                 navigate('/audit');
+                window.location.reload();
             } else {
                 console.error('Unknown role:', role);
+                window.location.reload();
             }
         } catch (error) {
             console.error(error);
         }
     };
+
+    if (userRole === 'user') {
+        return <div>You do not have access to this page.</div>;
+    }
 
     return (
         <div className='loginform'>
@@ -37,6 +60,7 @@ const Login = () => {
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
                 <button type="submit">Log In</button>
+                {error && <div className="error-message">{error}</div>}
             </form>
         </div>
     );

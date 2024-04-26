@@ -1,8 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import './Audit.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import api from "../../utils/api"
+
 
 const AuditForm = () => {
+    const navigate = useNavigate();
+    useEffect(() => {
+    const userRole = localStorage.getItem('role');
+        if ( userRole !== 'user' && userRole!== 'admin') {
+                navigate('/');
+        }
+
+        // const loginTime = localStorage.getItem('loginTime');
+        // const sessionTimeout = 6 * 60 * 60 * 1000; 
+        // if (!loginTime || Date.now() - loginTime > sessionTimeout) {
+        //     localStorage.removeItem('role');
+        //     localStorage.removeItem('loginTime');
+        //     navigate('/');
+        // }
+    }, [navigate]);
+
  const [formData, setFormData] = useState({
     area_name: '',
     audit_date: '',
@@ -12,7 +31,7 @@ const AuditForm = () => {
       {
         question: 'Are the rooms/ restrooms are clean and free from dust?',
         remark: '',
-        comment: '',
+        comment: '', 
         image: null
       },
       {
@@ -63,7 +82,7 @@ const AuditForm = () => {
 
  const fetchAreaName = async () => {
     try {
-      const response = await axios.get('http://192.168.137.108:8001/remote_area_weekly');
+      const response = await axios.get(`${api}/remote_area_weekly`);
       setArea(response.data);
     } catch (error) {
       console.error('Error fetching area name:', error);
@@ -114,7 +133,7 @@ const handleSubmit = async (e) => {
     });
 
     try {
-        const response = await fetch('http://192.168.137.108:8001/submit-audit', {
+        const response = await fetch(`${api}/submit-audit`, {
             method: 'POST',
             body: formDataToSubmit,
         });
@@ -229,7 +248,8 @@ const handleSubmit = async (e) => {
                                     type="file"
                                     accept="image/*"
                                     capture="environment"
-                                    onChange={(e) => handleFileChange(e, index)}                                    required 
+                                    onChange={(e) => handleFileChange(e, index)}                                   
+                                    required 
                                 />
                             </label>
                             </div>
