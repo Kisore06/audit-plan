@@ -2,12 +2,20 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import './Auditview.css';
+import IconButton from '@mui/material/IconButton';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import Modal from '@mui/material/Modal';
+import {Carousel} from 'react-responsive-carousel';
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+
 
 const AuditView = () => {
     const { area, date } = useParams();
     console.log('Area:', area);
     console.log('Date:', date);
     const [auditData, setAuditData] = useState({});
+    const [imageUrls, setImageUrls] = useState([]);
+    const [openModal, setOpenModal] = useState(false);
 
     useEffect(() => {
         const fetchAuditData = async () => {
@@ -29,8 +37,40 @@ const AuditView = () => {
         }
     }, [area, date]);
 
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
+    //img view
+    const handleOpenModal = (audit, questionIndex) => {
+        if (!audit) {
+            console.log("Audit data is undefined");
+            setImageUrls([]); 
+            return; 
+        }
+        const baseUrl = 'http://localhost:8001/'; 
+        const imageKey = `image_${questionIndex}`;
+        if (audit[imageKey]) {
+            const correctedPath = audit[imageKey].replace(/\\/g, '/');
+            // Construct the full URL and encode it
+            const encodedUrl = encodeURI(baseUrl + correctedPath);
+            setImageUrls([encodedUrl]); // Set only the relevant image URL
+        } else {
+            setImageUrls([]); // No image for this question
+        }
+        setOpenModal(true);
+    };
+    
+    const handleCloseModal = () => {
+        setOpenModal(false);
+    };
+
     return (
-        <div style={{ paddingTop: '90px' }}>
+        <div style={{ paddingTop: '90px', overflow:'auto' }}>
             <h2>Audit Details</h2>
             <h2>Remote Area Weekly</h2>
             {auditData.length > 0 ? (
@@ -44,7 +84,7 @@ const AuditView = () => {
                             </div>
                             <div className="audit-details-info">
                                 <h3>Audit Date: </h3>
-                                <p>{audit.audit_date}</p>
+                                <p>{formatDate(audit.audit_date)}</p>
                             </div>
                         </div>
                         <div className="audit-details-right">
@@ -66,6 +106,7 @@ const AuditView = () => {
                                 <th>Question</th>
                                 <th>Remarks</th>
                                 <th>Comments</th>
+                                <th>Image</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,11 +120,42 @@ const AuditView = () => {
                                         <td>{audit[questionField]}</td>
                                         <td>{audit[remarkField]}</td>
                                         <td>{audit[commentField]}</td>
+                                        <td>
+                                        {audit[remarkField] === "bad" && (
+                                            <IconButton
+                                            size= "small"
+                                            onClick={() => {
+                                                handleOpenModal(audit, index + 1);
+                                                setOpenModal(true);
+                                            }}
+                                            >
+                                            <VisibilityIcon />
+                                            </IconButton>
+                                        )}
+
+                                        </td>
                                     </tr>
+
                                 );
                             })}
+                            <Modal
+                                open={openModal}
+                                onClose={handleCloseModal}
+                                aria-labelledby="modal-title"
+                                aria-describedby="modal-description"
+                            >
+                                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'white', padding: '20px' }}>
+                                <Carousel>
+                                
+                                    {imageUrls.map((url, index) => (
+                                        <img key={index} src={url} alt={`Slide ${index + 1}`} />
+                                    ))}
+                                </Carousel>
+
+                                </div>
+                            </Modal>
                             <tr>
-                                <td colSpan="4">Suggestion: {audit.suggestion}</td>
+                                <td colSpan="5">Suggestion: {audit.suggestion}</td>
                             </tr>
                         </tbody>
                         </table>

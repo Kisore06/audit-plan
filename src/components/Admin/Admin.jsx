@@ -6,6 +6,16 @@ import { Link } from 'react-router-dom';
 // import { Link } from 'react-router-dom';
 // import VisibilityIcon from '@mui/icons-material/Visibility';
 
+// const fetchRoles = async () => {
+//     try {
+//         const response = await axios.get('http://192.168.137.108:8001/roles');
+//         return response.data;
+//     } catch (error) {
+//         console.error('Error fetching roles:', error);
+//         return [];
+//     }
+// };
+
 const AdminRegistration = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -34,7 +44,10 @@ const AdminRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8001/register', { username, password, roleId });
+// <<<<<<< HEAD
+//             const response = await axios.post('http://localhost:8001/register', { username, password, roleId });
+// =======
+            const response = await axios.post('http://localhost:8001/register', { username, password, roleId});
             console.log(response.data);
         } catch (error) {
             console.error(error);

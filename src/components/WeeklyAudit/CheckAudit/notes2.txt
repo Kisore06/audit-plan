@@ -1,33 +1,178 @@
-return (
-    <div style={{ paddingTop: '90px' }}>
-        <h2>Check Audits</h2>
-        <table className="audit-table">
-            <thead>
-                <tr>
-                    <th>Serial Number</th>
-                    <th>Audit Date</th>
-                    <th>Task ID</th>
-                    <th>Audit Area</th>
-                    <th>Area Gender</th>
-                    <th>Report Observation</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                {auditsData.map((audit, index) => {
-                    return audit.area_genders.map((gender, genderIndex) => (
-                        <tr key={`${index}-${genderIndex}`}>
-                            <td>{index + 1}</td>
-                            {index === 0 && <td rowSpan={auditsData.length}><input type="date" value={date} readOnly /></td>}
-                            {index === 0 && <td rowSpan={auditsData.length}><input type="text" value={audit.taskId} onChange={(e) => handleCellChange(e, index, 'taskId')}/></td>}
-                            <td>{audit.area}</td>
-                            <td>{gender}</td>
-                            <td><input type="text" value={audit.reportObservation} onChange={(e) => handleCellChange(e, index, 'reportObservation')} /></td>
-                            <td><input type="text" value={audit.remarks} onChange={(e) => handleCellChange(e, index, 'remarks')} /></td>
-                        </tr>
-                    ));
-                })}
-            </tbody>
-        </table>
-    </div>
-);
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import './CheckAudits.css';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { green, red } from '@mui/material/colors';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+
+const CheckAudits = () => {
+    const { date } = useParams();
+    const [taskId, setTaskId] = useState('');
+    const [areaNames, setAreaNames] = useState([]);
+    const [auditsData, setAuditsData] = useState([]);
+    const [processedAuditsData, setProcessedAuditsData] = useState({});
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedArea, setSelectedArea] = useState('');
+    const [selectedGender, setSelectedGender] = useState('');
+    const [selectedReportObservation, setSelectedReportObservation] = useState('');
+    const [selectedRemarks, setSelectedRemarks] = useState('');
+    const [isFormVisible, setIsFormVisible] = useState(false);
+
+    const [formData, setFormData] = useState({
+        taskIdSpecific: '',
+        actionTaken: '',
+        progress: 'inprogress',
+    });
+
+    useEffect(() => {
+        const fetchAreaNamesAndAudits = async () => {
+            try {
+                const areaResponse = await fetch('http://localhost:8001/remote_area_weekly');
+                const areaData = await areaResponse.json();
+                const uniqueAreaNames = [...new Set(areaData.map(item => item.area))];
+                setAreaNames(uniqueAreaNames);
+
+                const specificarea = [...new Set(areaData.map(item => item.area_gender))];
+                const fetchPromises = specificarea.map(async (gender) => {
+                    const response = await fetch(`http://localhost:8001/audits/by-date-and-area?date=${date}&areaName=${gender}`);
+                    if (!response.ok) {
+                        throw new Error(`Error fetching audits for date: ${date} and area: ${gender}`);
+                    }
+                    return response.json();
+                });
+
+                const allAuditsData = await Promise.all(fetchPromises);
+                const auditsData = allAuditsData.flat();
+                setAuditsData(auditsData);
+
+                const processedData = areaData.reduce((acc, curr) => {
+                    const areaName = curr.area;
+                    const areaGender = curr.area_gender;
+                    if (!acc[areaName]) {
+                        acc[areaName] = {};
+                    }
+                    acc[areaName][areaGender] = [];
+                    return acc;
+                }, {});
+
+                setProcessedAuditsData(processedData);
+            } catch (error) {
+                console.error('Error fetching area names and audits:', error);
+            }
+        };
+
+        const fetchTaskId = async () => {
+            try {
+                const response = await fetch(`http://localhost:8001/getTaskIdByDate?date=${date}`);
+                if (!response.ok) {
+                    throw new Error(`Error fetching taskId for date: ${date}`);
+                }
+                const data = await response.json();
+                setTaskId(data.taskId);
+            } catch (error) {
+                console.error('Error fetching taskId:', error);
+            }
+        };
+
+        fetchAreaNamesAndAudits();
+        fetchTaskId();
+    }, [date]);
+
+    const handleCellChange = (e, areaName, areaGender, field) => {
+        const updatedAuditsData = auditsData.map(audit => {
+            if (audit.area_name === areaName && audit.area_gender === areaGender) {
+                return { ...audit, [field]: e.target.value };
+            }
+            return audit;
+        });
+        setAuditsData(updatedAuditsData);
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
+    const generateSerialNumbers = () => {
+        let serialNumber = 1;
+        const serialNumbers = {};
+        areaNames.forEach(areaName => {
+            serialNumbers[areaName] = serialNumber++;
+        });
+        return serialNumbers;
+    };
+
+    const serialNumbers = generateSerialNumbers();
+
+    const determineReportObservation = (audit) => {
+        let comments = [];
+        let allGood = true;
+
+        for (let i = 1; i <= 7; i++) {
+            const remark = audit[`remark_${i}`];
+            const comment = audit[`comment_${i}`];
+
+            if (remark === 'bad') {
+                comments.push(`- ${comment || 'No comment provided.'}`);
+                allGood = false;
+            }
+        }
+
+        if (allGood) {
+            return 'No discrepancies found.';
+        }
+
+        if (comments.length > 0) {
+            return comments.join('<br />');
+        }
+
+        return 'No data found.';
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch('http://localhost:8001/insertSpecificTask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    date,
+                    taskId,
+                    auditArea: selectedArea,
+                    specificArea: selectedGender,
+                    reportObservation: selectedReportObservation,
+                    remarks: selectedRemarks,
+                    taskIdSpecific: formData.taskIdSpecific,
+                    actionTaken: formData.actionTaken,
+                    progress: formData.progress,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit data');
+            }
+
+            setIsFormVisible(false);
+            setFormData({
+                taskIdSpecific: '',
+                actionTaken: '',
+                progress: 'inprogress',
+            });
+        } catch (error) {
+            console.error('Error submitting data:', error);
+        }
+    };

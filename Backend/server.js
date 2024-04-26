@@ -10,6 +10,7 @@ const multer = require('multer');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.json())
 app.use('/uploads/images', express.static('uploads/images'));
 
 
@@ -54,6 +55,13 @@ const upload = multer({ storage: storage }).fields([
     { name: 'image6', maxCount: 1 },
     { name: 'image7', maxCount: 1 },
 ]);
+
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send({ message: 'Internal server error', error: err.message });
+});
+
 
 // Login endpoint with role-based access control
 app.post('/login', async (req, res) => {
@@ -327,21 +335,26 @@ app.get('/audits/by-date-and-area', (req, res) => {
 });
 
 // Submit audit form data
-app.post('/submit-audit-form', (req, res) => {
-    const { date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress } = req.body;
-
+app.post('/submit-audit-form',(req, res) => {
+    console.log("triggered")
+    console.log(Object.values(req.body))
+    const [ date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress ] = Object.values(req.body);
+    
     if (!date || !taskId || !auditArea || !specificArea || !reportObservation || !remarks || !taskIdSpecific || !actionTaken || !progress) {
         return res.status(400).send({ message: 'All fields are required.' });
     }
 
     const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, suggestions, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const values = [date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress];
-
+    console.log(values)
     db.query(query, values, (error, results) => {
+        console.log(error)
         if (error) {
+            console.log(error)
             console.error('Error inserting audit form data:', error);
             res.status(500).send({ message: 'Error inserting audit form data', error: error.message });
         } else {
+            console.log("success")
             res.send({ message: 'Audit form data submitted successfully' });
         }
     });

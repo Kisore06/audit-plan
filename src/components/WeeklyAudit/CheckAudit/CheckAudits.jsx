@@ -13,8 +13,7 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import Modal from '@mui/material/Modal';
+import ImageIcon from '@mui/icons-material/Image';import Modal from '@mui/material/Modal';
 import {Carousel} from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 
@@ -176,7 +175,7 @@ const CheckAudits = () => {
         // Check if the new taskId already exists
         if (assignedTaskIds.includes(newTaskId)) {
             alert('A taskId with this value has already been assigned. Please choose a different taskId.');
-            return; // Prevent form submission
+            return;
         }
 
         const progressValue = formData.progress === 'inprogress' ? 'In Progress' : 'Completed';
@@ -188,8 +187,8 @@ const CheckAudits = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    date,
-                    taskId,
+                    date:date,
+                    taskId:taskId,
                     auditArea: selectedArea,
                     specificArea: selectedGender,
                     reportObservation: selectedReportObservation,
@@ -246,8 +245,8 @@ const CheckAudits = () => {
  
 
     return (
-        <div style={{ paddingTop: '90px' }}>
-            <h2>Check Audits</h2>
+        <div style={{ paddingTop: '90px', overflow: 'auto' }}>
+        <h2>Check Audits</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <div>Audit Date: {formatDate(date)}</div>
                 <div>Task ID: {taskId}</div>
@@ -305,7 +304,7 @@ const CheckAudits = () => {
                                                 setOpenModal(true);
                                             }}
                                         >
-                                            <VisibilityIcon />
+                                            <ImageIcon />
                                         </IconButton>
 
                                         <Modal
