@@ -60,11 +60,7 @@ const WeeklyAudit = () => {
       }
   
       try {
-<<<<<<< HEAD
-          const response = await fetch(`http://localhost:8001/assignTask`, {
-=======
           const response = await fetch(`${api}/assignTask`, {
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

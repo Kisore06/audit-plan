@@ -269,20 +269,20 @@ app.get('/getTaskIdByDate', (req, res) => {
     });
 });
 
-// remote-area-weekly
-app.get('/remote_area_weekly', (req, res) => {
-    console.log('vanthuten...')
- const query= 'SELECT * FROM remote_area_weekly'
- db.query(query, (error, results) => {
-    if (error) {
-        console.error('code la prblm...')
-        res.status(500).send('code la prblm...');
-    }else {
-        console.log('vanthuten nu sollu...');
-        res.send(results);
-    }
- });
-});
+// // remote-area-weekly
+// app.get('/remote_area_weekly', (req, res) => {
+//     console.log('vanthuten...')
+//  const query= 'SELECT * FROM remote_area_weekly'
+//  db.query(query, (error, results) => {
+//     if (error) {
+//         console.error('code la prblm...')
+//         res.status(500).send('code la prblm...');
+//     }else {
+//         console.log('vanthuten nu sollu...');
+//         res.send(results);
+//     }
+//  });
+// });
 
 // audit-form
 app.get('/audit', (req, res) => {
@@ -417,7 +417,7 @@ app.post('/submit-audit-form',(req, res) => {
 // Fetch tasks by date range
 app.get('/fetchTasks', (req, res) => {
     const { startDate, endDate } = req.query;
-
+    console.log(startDate+"||"+endDate)
     if (!startDate || !endDate) {
         return res.status(400).send({ message: 'Both startDate and endDate must be provided.' });
     }

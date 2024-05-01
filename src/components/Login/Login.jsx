@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { ToastContainer, toast } from 'react-toastify';
@@ -9,10 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './Login.css'; // Import the CSS file
 import '../../Assets/header/bitFullLogo.png';
 import '../../Assets/header/13.png';
-=======
-import './Login.css'; 
-import api from "../../utils/api"
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
+import api from "../../utils/api";
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -20,28 +16,17 @@ const Login = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const [userRole, setUserRole] = useState(null);
-    
 
     const notifySuccess = (message) => {
         toast.success(message, { position: 'bottom-left' });
     };
-    
+
     const notifyError = (message) => {
         toast.error(message, { position: 'bottom-left' });
     };
-    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-<<<<<<< HEAD
-        try {
-            const response = await axios.post('http://localhost:8001/login', { username, password });
-            console.log(response.data);
-            const { role } = response.data;
-=======
-        setError(''); 
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
 
         if (username.length < 3 || password.length < 3) {
             setError('Username must be at least 3 characters long, and password must be at least 3 characters long.');
@@ -57,7 +42,7 @@ const Login = () => {
             localStorage.setItem('role', role);
             localStorage.setItem('userToken', token);
             localStorage.setItem('loginTime', Date.now());
-            
+
             if (role === 'admin') {
                 notifySuccess("Login Successful");
                 navigate('/week');
@@ -66,7 +51,13 @@ const Login = () => {
                 notifySuccess("Login Successful");
                 navigate('/audit');
                 window.location.reload();
-            } else {
+            }
+            else if (role === 'executer'){
+                notifySuccess("Login Successful");
+                navigate('./campus');
+                window.location.reload();
+            }
+            else {
                 notifyError("Unknown role");
                 console.error('Unknown role:', role);
                 window.location.reload();
@@ -82,12 +73,12 @@ const Login = () => {
     }
 
     return (
-<<<<<<< HEAD
         <div className='total-login-page'>
             <ToastContainer />
             <div className='total-login-card'>
                 <div className='login-form-flex'>
                     <div className='card-to-arrange'>
+                        {error && <div className="error-message">{error}</div>}
                         <form className="login-form" onSubmit={handleSubmit}>
                             <div className="login-title">LOGIN</div>
                             <TextField
@@ -118,18 +109,6 @@ const Login = () => {
                     </div>
                 </div>
             </div>
-=======
-        <div className='loginform'>
-            <form className="login-form" onSubmit={handleSubmit}>
-                <h2>Log In</h2>
-                <label htmlFor="username">Username</label>
-                <input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required />
-                <label htmlFor="password">Password</label>
-                <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-                <button type="submit">Log In</button>
-                {error && <div className="error-message">{error}</div>}
-            </form>
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
         </div>
     );
 }

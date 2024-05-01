@@ -26,28 +26,6 @@
 h1 {
     margin: 0;
     font-size: 24px;
-<<<<<<< HEAD
-}
-
-.hamburger {
-    cursor: pointer;
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    width: 24px;
-    height: 16px;
-    padding: 0;
-    margin-left: auto;
-}
-
-.hamburger-line {
-    width: 100%;
-    height: 2px;
-    background-color: #333;
-}
-=======
    }
 
    .user-info {
@@ -86,4 +64,3 @@ h1 {
     display: block;
    }
    
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d

@@ -35,11 +35,7 @@ const AuditView = () => {
                 return; 
             }
             try {
-<<<<<<< HEAD
-                const response = await axios.get(`http://localhost:8001/audit?areaName=${encodeURIComponent(area)}&auditDate=${encodeURIComponent(date)}`);
-=======
                 const response = await axios.get(`${api}/audit?areaName=${encodeURIComponent(area)}&auditDate=${encodeURIComponent(date)}`);
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
                 console.log(response.data);
                 setAuditData(response.data);
             } catch (error) {
@@ -67,11 +63,7 @@ const AuditView = () => {
             setImageUrls([]); 
             return; 
         }
-<<<<<<< HEAD
-        const baseUrl = 'http://localhost:8001/'; 
-=======
         const baseUrl = `${api}/`; 
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
         const imageKey = `image_${questionIndex}`;
         if (audit[imageKey]) {
             const correctedPath = audit[imageKey].replace(/\\/g, '/');

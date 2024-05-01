@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-<<<<<<< HEAD
 import './Admin.css';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { Link } from 'react-router-dom';
+// import VisibilityIcon from '@mui/icons-material/Visibility';
+// import { Link } from 'react-router-dom';
 // import { Link } from 'react-router-dom';
 // import VisibilityIcon from '@mui/icons-material/Visibility';
 
@@ -16,34 +15,29 @@ import { Link } from 'react-router-dom';
 //         return [];
 //     }
 // };
-=======
-import './Admin.css'; 
 import{useNavigate} from 'react-router-dom';
 import api from "../../utils/api"
 
-const fetchRoles = async () => {
-    try {
-        const response = await axios.get(`${api}/roles`);
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching roles:', error);
-        return [];
-    }
-};
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
+// const fetchRoles = async () => {
+//     try {
+//         const response = await axios.get(`${api}/roles`);
+//         return response.data;
+//     } catch (error) {
+//         console.error('Error fetching roles:', error);
+//         return [];
+//     }
+// };
 
 const AdminRegistration = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [roleId, setRoleId] = useState('');
     const [role, setRole] = useState([]);
-<<<<<<< HEAD
     // const [showSubLines, setShowSubLines] = useState(false);
-    const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
-    const [selectedDateForTask, setSelectedDateForTask] = useState('');
-    const [taskIdForTask, setTaskIdForTask] = useState('');
-    const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
-=======
+    // const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
+    // const [selectedDateForTask, setSelectedDateForTask] = useState('');
+    // const [taskIdForTask, setTaskIdForTask] = useState('');
+    // const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -53,7 +47,6 @@ const AdminRegistration = () => {
             navigate('/');
         }
     }, [navigate]);
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
 
     useEffect(() => {
         fetchRoles().then(setRole);
@@ -61,7 +54,7 @@ const AdminRegistration = () => {
 
     const fetchRoles = async () => {
         try {
-            const response = await axios.get('http://localhost:8001/roles');
+            const response = await axios.get(`${api}/roles`);
             return response.data;
         } catch (error) {
             console.error('Error fetching roles:', error);
@@ -72,14 +65,7 @@ const AdminRegistration = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-<<<<<<< HEAD
-// <<<<<<< HEAD
-//             const response = await axios.post('http://localhost:8001/register', { username, password, roleId });
-// =======
-            const response = await axios.post('http://localhost:8001/register', { username, password, roleId});
-=======
             const response = await axios.post(`${api}/register`, { username, password, roleId});
->>>>>>> 62e26b4650dfb16c024e4c85d0398e7ef86c7d7d
             console.log(response.data);
         } catch (error) {
             console.error(error);
@@ -94,9 +80,9 @@ const AdminRegistration = () => {
     // };
 
 
-    const handleDateChangeAudit = (e) => {
-        setSelectedDateAudit(e.target.value);
-    };
+    // const handleDateChangeAudit = (e) => {
+    //     setSelectedDateAudit(e.target.value);
+    // };
 
     // const handleView = (area, date) => {
     //     // Construct the URL for navigation
@@ -104,43 +90,43 @@ const AdminRegistration = () => {
     //     return <Link to={url}><VisibilityIcon/></Link>;
     // };
 
-    const handleStartDateChange = (e) => {
-        setDateRange({ ...dateRange, startDate: e.target.value });
-    };
+//     const handleStartDateChange = (e) => {
+//         setDateRange({ ...dateRange, startDate: e.target.value });
+//     };
    
-    const handleEndDateChange = (e) => {
-        setDateRange({ ...dateRange, endDate: e.target.value });
-    };
+//     const handleEndDateChange = (e) => {
+//         setDateRange({ ...dateRange, endDate: e.target.value });
+//     };
    
 
-    const assignTask = async () => {
-      if (!selectedDateForTask || !taskIdForTask) {
-          alert('Please select a date and enter a Task ID before proceeding.');
-          return;
-      }
+//     const assignTask = async () => {
+//       if (!selectedDateForTask || !taskIdForTask) {
+//           alert('Please select a date and enter a Task ID before proceeding.');
+//           return;
+//       }
  
-      try {
-          const response = await fetch(`http://localhost:8001/assignTask`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ date: selectedDateForTask, taskId: taskIdForTask }),
-          });
+//       try {
+//           const response = await fetch(`http://localhost:8001/assignTask`, {
+//               method: 'POST',
+//               headers: {
+//                   'Content-Type': 'application/json',
+//               },
+//               body: JSON.stringify({ date: selectedDateForTask, taskId: taskIdForTask }),
+//           });
  
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to assign task.');          }
+//           if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || 'Failed to assign task.');          }
  
-          alert('Task assigned successfully.');
-          // Optionally, clear the input fields after successful assignment
-          setSelectedDateForTask('');
-          setTaskIdForTask('');
-      } catch (error) {
-          console.error('Error:', error);
-          alert(error.message);
-      }
-  };
+//           alert('Task assigned successfully.');
+//           // Optionally, clear the input fields after successful assignment
+//           setSelectedDateForTask('');
+//           setTaskIdForTask('');
+//       } catch (error) {
+//           console.error('Error:', error);
+//           alert(error.message);
+//       }
+//   };
 
     return (
 <div className="flex-container">
@@ -163,7 +149,7 @@ const AdminRegistration = () => {
                 </form>
             </div>
         </div>
-            <div className="card-container">
+            {/* <div className="card-container">
             <div className="card-title">Check Audits</div>
             <div className="card-content">
                 <input type="date" value={selectedDateAudit} onChange={handleDateChangeAudit} />
@@ -177,19 +163,19 @@ const AdminRegistration = () => {
                     <VisibilityIcon />
                 </Link>
             </div>
-        </div>
+        </div> */}
 
-        <div className="card-container">
+        {/* <div className="card-container">
             <div className="card-title">Assign Task ID for audit</div>
             <div className="card-content">
                 <input type="date" value={selectedDateForTask} onChange={(e) => setSelectedDateForTask(e.target.value)} />
                 <input type="text" value={taskIdForTask} onChange={(e) => setTaskIdForTask(e.target.value)} placeholder="Enter Task ID" />
                 <button className="assign-button" onClick={assignTask}>Assign Task</button>
             </div>
-        </div>
+        </div> */}
 
     {/* view assigned taska and mark the progress within a date range */}
-    <div className="card-container">
+    {/* <div className="card-container">
             <div className="card-title">Check Assigned Tasks</div>
             <div className="card-content">
                 <p>Start date:</p>
@@ -221,7 +207,7 @@ const AdminRegistration = () => {
                     <VisibilityIcon />
                 </Link>
             </div>
-        </div>
+        </div> */}
         </div>
     );
 }

@@ -11,6 +11,7 @@ import AdminRegistration from './components/Admin/Admin';
 import CheckAudits from './components/WeeklyAudit/CheckAudit/CheckAudits';
 import AssignWork from './components/WeeklyAudit/AssignWork/AssignWork';
 import { ToastContainer } from 'react-toastify';
+import Campus from './components/Admin/campus';
 
 function App() {
  const location = useLocation();
@@ -41,6 +42,7 @@ function App() {
         <Route path="/week" element={<WeeklyAudit />} />
         <Route path="/admin-register" element={<AdminRegistration />} />
         <Route path="/audit" element={<Audit/>}/>
+        <Route path="/campus" element={<Campus />} />
         <Route path="/audit/:area/:date" element={<AuditView />} />
         <Route path="/checkAudits/:date" element={<CheckAudits />} />
         <Route path="/assignWork/:startDate/:endDate" element={<AssignWork />} />
