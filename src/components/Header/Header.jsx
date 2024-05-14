@@ -4,10 +4,13 @@ import logo from '../../Assets/header/Bannari_Amman_Institute_of_Technology_logo
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { useNavigate } from 'react-router-dom';
 
+
 const Header = () => {
  const navigate = useNavigate();
  const [isLoggedIn, setIsLoggedIn] = useState(false);
  const [username, setUsername] = useState('');
+
+
 
  useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -31,6 +34,7 @@ const Header = () => {
     navigate('/');
     window.location.reload();
  };
+
 
 
  return (

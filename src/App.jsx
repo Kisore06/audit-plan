@@ -10,6 +10,8 @@ import Login from './components/Login/Login';
 import AdminRegistration from './components/Admin/Admin';
 import CheckAudits from './components/WeeklyAudit/CheckAudit/CheckAudits';
 import AssignWork from './components/WeeklyAudit/AssignWork/AssignWork';
+import SpecificTask from './components/WeeklyAudit/SpecificTask/SpecificTAsk';
+import UserDetails from './components/Users/UserDetails';
 
 function App() {
  const location = useLocation();
@@ -32,17 +34,19 @@ function App() {
     }, [navigate]);
 
  return (
-    <div>
+    <div id="app">
     <Header/>
       {/* {location.pathname !== '/' && <Header/>} */}
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/week" element={<WeeklyAudit />} />
         <Route path="/admin-register" element={<AdminRegistration />} />
+        <Route path="/user-details" element={<UserDetails />} />
         <Route path="/audit" element={<Audit/>}/>
         <Route path="/audit/:area/:date" element={<AuditView />} />
         <Route path="/checkAudits/:date" element={<CheckAudits />} />
         <Route path="/assignWork/:startDate/:endDate" element={<AssignWork />} />
+        <Route path="/specificTasks/:date" element={<SpecificTask />} />
       </Routes>
       {location.pathname !== '/' && <Footer/>}
     </div>

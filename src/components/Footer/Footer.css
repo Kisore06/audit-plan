@@ -8,7 +8,8 @@
     padding: 20px;
     background-color: #f8f9fa;
     z-index: 1000; 
-    border-top: 2px solid #ccc;  
+    border-top: 2px solid #ccc;
+    overflow-x: hidden; 
    }
    
    .footer-content {

@@ -12,8 +12,6 @@ import api from "../../utils/api"
 
 const AuditView = () => {
     const { area, date } = useParams();
-    console.log('Area:', area);
-    console.log('Date:', date);
     const [auditData, setAuditData] = useState({});
     const [imageUrls, setImageUrls] = useState([]);
     const [openModal, setOpenModal] = useState(false);
@@ -36,7 +34,6 @@ const AuditView = () => {
             }
             try {
                 const response = await axios.get(`${api}/audit?areaName=${encodeURIComponent(area)}&auditDate=${encodeURIComponent(date)}`);
-                console.log(response.data);
                 setAuditData(response.data);
             } catch (error) {
                 console.error('Error fetching audit data:', error);
@@ -80,31 +77,48 @@ const AuditView = () => {
         setOpenModal(false);
     };
 
+    //week number
+    const parsedDate = new Date(date);
+
+    // Extract the month and year
+    const month = parsedDate.toLocaleString('default', { month: 'long' });
+    const year = parsedDate.getFullYear();
+
+    // Calculate the week number of the month
+    const firstDayOfMonth = new Date(year, parsedDate.getMonth(), 1);
+    const pastDaysOfMonth = (parsedDate - firstDayOfMonth) / 86400000;
+    const weekNumber = Math.ceil((pastDaysOfMonth + firstDayOfMonth.getDay() + 1) / 7);
+
+    // Format the month, year, and week number
+    const analysisWeek = `${month} ${year} (week ${weekNumber})`;
+
     return (
         <div style={{ paddingTop: '90px', overflow:'auto' }}>
-            <h2>Audit Details</h2>
-            <h2>Remote Area Weekly</h2>
+            <div style={{ textAlign: "center" }}>
+                <h2>Weekly Audit Details</h2>
+                <h4 >Remote Area Analysis Report - {analysisWeek}</h4>
+            </div>
             {auditData.length > 0 ? (
                 auditData.map((audit, index) => (
                     <div key={index}>
                         <div className="audit-details">
                         <div className="audit-details-left">
                             <div className="audit-details-info">
-                                <h3>Area Name: </h3>
+                                <h3 className='h3'>Area Name: </h3>
                                 <p>{audit.area_name}</p>
                             </div>
                             <div className="audit-details-info">
-                                <h3>Audit Date: </h3>
+                                <h3 className='h3'>Audit Date: </h3>
                                 <p>{formatDate(audit.audit_date)}</p>
                             </div>
                         </div>
                         <div className="audit-details-right">
                             <div className="audit-details-info">
-                                <h3>Auditor Name: </h3>
+                                <h3 className='h3'>Auditor Name: </h3>
                                 <p>{audit.auditor_name}</p>
                             </div>
                             <div className="audit-details-info">
-                                <h3>Auditor Phone: </h3>
+                                <h3 className='h3'>Auditor Phone: </h3>
                                 <p>{audit.auditor_phone}</p>
                             </div>
                         </div>

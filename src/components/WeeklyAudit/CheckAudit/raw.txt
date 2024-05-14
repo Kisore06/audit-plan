@@ -17,7 +17,12 @@ import ImageIcon from '@mui/icons-material/Image';import Modal from '@mui/materi
 import {Carousel} from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import api from "../../../utils/api";
-import emailjs from '@emailjs/browser';
+// import { BlobProvider } from '@react-pdf/renderer';
+// import CheckAuditsPDF from './CheckAuditsPDF';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import 'jspdf-autotable';
+
 
 
 const CheckAudits = () => {
@@ -36,7 +41,78 @@ const CheckAudits = () => {
     const [assignedTaskIds, setAssignedTaskIds] = useState([]);
     const [imageUrls, setImageUrls] = useState([]);
     const [openModal, setOpenModal] = useState(false);
-    const [specificTasksData, setSpecificTasksData] = useState([])
+    // eslint-disable-next-line no-unused-vars
+    const [loader, setLoader] = useState(false);
+
+// eslint-disable-next-line no-unused-vars
+    const downloadPDF = () => {
+        const capture = document.querySelector('.testDownload');
+        const tableCapture = document.querySelector('.audit-table'); // Assuming .audit-table is the class of your table
+        setLoader(true);
+    
+        // Capture both the div and the table
+        Promise.all([
+            html2canvas(capture),
+            html2canvas(tableCapture)
+        ]).then(([divCanvas, tableCanvas]) => {
+            const divImgData = divCanvas.toDataURL('image/png');
+            const tableImgData = tableCanvas.toDataURL('image/png');
+    
+            const margin = 10; // Margin in mm on both sides
+            const availableWidth = 297 - 2 * margin; // A4 width in mm for landscape minus the margins
+            const imgWidth = (divCanvas.width * availableWidth) / divCanvas.width;
+            const imgHeight = (divCanvas.height * imgWidth) / divCanvas.width;
+            const tableImgWidth = (tableCanvas.width * availableWidth) / tableCanvas.width;
+            const tableImgHeight = (tableCanvas.height * tableImgWidth) / tableCanvas.width;
+    
+            const doc = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape, 'a4' for page format
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let heightLeft = imgHeight + tableImgHeight; // Total height of both the div and the table
+            let position = 0;
+    
+            // Adjust the position to account for the left margin
+            const adjustedPosition = margin;
+    
+            // Add the div content
+            doc.addImage(divImgData, 'PNG', adjustedPosition, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+    
+            // Add the table content
+            position = heightLeft - tableImgHeight;
+            doc.addPage();
+            doc.addImage(tableImgData, 'PNG', adjustedPosition, position, tableImgWidth, tableImgHeight);
+            heightLeft -= pageHeight;
+    
+            // Add additional pages if the content exceeds one page
+            while (heightLeft >= 0) {
+                position = heightLeft - tableImgHeight;
+                doc.addPage();
+                doc.addImage(tableImgData, 'PNG', adjustedPosition, position, tableImgWidth, tableImgHeight);
+                heightLeft -= pageHeight;
+            }
+    
+            setLoader(false);
+            doc.save('Check Audit.pdf');
+        });
+    };
+    
+    
+    // const pdfDownloadRef = useRef(); // New ref for PDF download
+
+    // const handleDownload = () => {
+    //     if (pdfDownloadRef.current) {
+    //        const url = URL.createObjectURL(pdfDownloadRef.current);
+    //        const link = document.createElement('a');
+    //        link.href = url;
+    //        link.setAttribute('download', 'audits.pdf');
+    //        document.body.appendChild(link);
+    //        link.click();
+    //        link.parentNode.removeChild(link);
+    //     } else {
+    //        console.error('Blob is not available for download.');
+    //     }
+    //    };
+       
 
 
     const navigate = useNavigate();
@@ -105,22 +181,21 @@ const CheckAudits = () => {
                 console.error('Error fetching taskId:', error);
             }
         };
-
-        const fetchSpecificTasksData = async () => {
-            try {
-              const response = await fetch(`${api}/specific?date=${date}`);
-              const data = await response.json();
-                setSpecificTasksData(data);
-            } catch (error) {
-              console.error('Error fetching specific tasks data:', error);
-            }
-          };
         
 
         fetchAreaNamesAndAudits();
         fetchTaskId();
-        fetchSpecificTasksData();
     }, [date]);
+
+    // const handleCellChange = (e, areaName, areaGender, field) => {
+    //     const updatedAuditsData = auditsData.map(audit => {
+    //         if (audit.area_name === areaName && audit.area_gender === areaGender) {
+    //             return { ...audit, [field]: e.target.value };
+    //         }
+    //         return audit;
+    //     });
+    //     setAuditsData(updatedAuditsData);
+    // };
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -181,7 +256,7 @@ const CheckAudits = () => {
         return 'No data found.';
     };
 
-    //another useEffect for closing the form when i click outside of it
+    //another useRef for closing the form when i click outside of it
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (formRef.current && !formRef.current.contains(event.target)) {
@@ -198,28 +273,17 @@ const CheckAudits = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
-        const existingAssignment = specificTasksData.find(assignment => 
-            assignment.task_id_specific === formData.taskIdSpecific
-          );
 
-        const otherTaskForSameArea = specificTasksData.find(assignment => {
-            return assignment.specific_area === selectedGender && formatDate(assignment.date) === formatDate(date);
-        });
-                
-        if (existingAssignment) {
-            alert('A specific task ID of this value has already been assigned!');
+        const newTaskId = formData.taskIdSpecific;
+
+        // Check if the new taskId already exists
+        if (assignedTaskIds.includes(newTaskId)) {
+            alert('A taskId with this value has already been assigned. Please choose a different taskId.');
             return;
         }
-        if (otherTaskForSameArea) {
-        alert("Another task has already been submitted for this area on this date.");
-        return; 
-        }
-    
-        const newTaskId = formData.taskIdSpecific;
-    
-        const progressValue = formData.progress === 'inprogress'? 'In Progress' : 'Completed';
-    
+
+        const progressValue = formData.progress === 'inprogress' ? 'In Progress' : 'Completed';
+
         try {
             const response = await fetch(`${api}/submit-audit-form`, {
                 method: 'POST',
@@ -239,49 +303,24 @@ const CheckAudits = () => {
                     progress: progressValue,
                 }),
             });          
-    
+
             if (!response.ok) {
                 throw new Error('Failed to submit data');
             }
-    
-            // Update the assignedTaskIds state to include the new task ID and area_gender
-            setAssignedTaskIds([...assignedTaskIds, { taskId: newTaskId, area_gender: selectedGender, date: date }]);
-    
 
-            const templateParams ={
-                from_name: 'Kishore.R',
-                from_email:' Kishore.cb20@bitsathy.ac.in',
-                to_name: 'KISHORE R',
-                message: `The action taken was: ${formData.actionTaken} and the specific area is: ${selectedGender}.`,
-            };
-            emailjs.send('service_nil48bf', 'template_bn0iql4', templateParams, 'Id7VjWrFQJNXniBq6')
-             .then((result) => {
-                    alert('Email successfully sent!');
-                }, (error) => {
-                    alert('Failed to send email:', error);
-                });
-                
+            setAssignedTaskIds([...assignedTaskIds, newTaskId]);
+
             setIsFormVisible(false);
             setFormData({
                 taskIdSpecific: '',
                 actionTaken: '',
                 progress: 'inprogress',
             });
-            alert("Specific Task ID assigned Successfully...");
-            
-                        // const recipient = 'dalekishore002@gmail.com'; 
-            // const subject = encodeURIComponent('Specific Task ID Assigned'); 
-            // const body = encodeURIComponent('New TAsks are assigned for this week. Kindly check the website for updates.'); 
-
-            // const mailtoLink = `mailto:${recipient}?subject=${subject}&body=${body}`;
-        
-            // window.open(mailtoLink, '_blank');
-            
+            alert("specific Task ID assigned Succesfully!...")
         } catch (error) {
             console.error('Error submitting data:', error);
         }
     };
-    
 
     //img view
     const handleOpenModal = (audit) => {
@@ -318,12 +357,218 @@ const CheckAudits = () => {
             }
         }
         return count + badRemarksCount;
-    }, 0);  
-    
-    
-/////server side approach:
+    }, 0);
 
-// Example: Selecting specific columns and preparing data for server
+    ////
+
+    // function exportTableToCSV(data) {
+    //     const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
+    //     const header = Object.keys(data[0]);
+    //     let csv = [];
+    //     let lastSerialNumber = '';
+    
+    //     data.forEach((row, index) => {
+    //         // Prepare the row data
+    //         const values = header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',');
+    //         // Check if the current row's SerialNumber is the same as the last one
+    //         if (row.SerialNumber !== lastSerialNumber) {
+    //             // If not, add the row as is
+    //             csv.push(values);
+    //         } else {
+    //             // If it is, modify the CSV line to merge cells
+    //             // This involves removing the SerialNumber from the CSV line
+    //             const valuesWithoutSerialNumber = values.split(',').slice(1).join(',');
+    //             csv.push(',' + valuesWithoutSerialNumber); // Add a comma at the beginning to align with the header
+    //         }
+    //         lastSerialNumber = row.SerialNumber;
+    //     });
+    
+    //     csv.unshift(header.join(','));
+    //     csv = csv.join('\r\n');
+    
+    //     // Create a Blob from the CSV string
+    //     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    
+    //     // Create a link element
+    //     const link = document.createElement('a');
+    //     const url = URL.createObjectURL(blob);
+    //     link.setAttribute('href', url);
+    //     link.setAttribute('download', 'audit_data.csv');
+    //     link.style.visibility = 'hidden';
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    // }
+    
+    function exportTableToCSV(data) {
+        const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
+        const header = Object.keys(data[0]);
+        let csv = [];
+        let lastSerialNumber = '';
+        let lastAuditArea = '';
+    
+        // Prepare the CSV header
+        csv.push(header.join(','));
+    
+        data.forEach((row, index) => {
+            // Prepare the row data
+            const values = header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',');
+            let csvLine = '';
+    
+            // Check if the current row's SerialNumber is the same as the last one
+            if (row.SerialNumber !== lastSerialNumber) {
+                // If not, add the SerialNumber to the CSV line
+                csvLine += row.SerialNumber + ',';
+                lastSerialNumber = row.SerialNumber;
+            } else {
+                // If it's the same, add an empty field for SerialNumber
+                csvLine += ',';
+            }
+    
+            // Check if the current row's AuditArea is the same as the last one
+            if (row.AuditArea !== lastAuditArea) {
+                // If not, add the AuditArea to the CSV line
+                csvLine += row.AuditArea + ',';
+                lastAuditArea = row.AuditArea;
+            } else {
+                // If it's the same, add an empty field for AuditArea
+                csvLine += ',';
+            }
+    
+            // Add the rest of the row data, excluding the SerialNumber and AuditArea
+            const rowData = values.split(',').slice(2).join(',');
+            csvLine += rowData;
+    
+            // Add the CSV line to the CSV array
+            csv.push(csvLine);
+        });
+    
+        csv = csv.join('\r\n');
+    
+        // Create a Blob from the CSV string
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    
+        // Create a link element
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'audit_data.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+   // eslint-disable-next-line no-unused-vars
+    const handleExport = () => {
+        // Assuming `processedAuditsData` is your data source
+        const dataToExport = Object.entries(processedAuditsData).map(([areaName, areaGenders]) => {
+            return Object.entries(areaGenders).map(([gender, audits]) => {
+                // Find the auditData for the current gender
+                const auditData = auditsData.find(audit => audit.area_name === gender);
+    
+                // Safely access properties of auditData
+                const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
+                const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
+                const suggestions = auditData ? auditData.suggestion || '' : '';
+    
+                return {
+                    SerialNumber: serialNumbers[areaName],
+                    AuditArea: areaName,
+                    SpecificArea: gender,
+                    ReportObservation: reportObservation,
+                    Remarks: remarksString,
+                    Suggestions: suggestions,
+                    // Add any other fields you need
+                };
+            });
+        }).flat(); // Flatten the array to get a single array of objects
+    
+        exportTableToCSV(dataToExport);
+//         const doc = new jsPDF("l", "mm", "legal");
+
+//     // Define the columns for the table
+//     const columns = ["SerialNumber", "AuditArea", "SpecificArea", "ReportObservation", "Remarks", "Suggestions"];
+
+//     // Initialize variables to track the last serial number and area name
+//     let lastSerialNumber = '';
+//     let lastAuditArea = '';
+
+//     // Prepare the body of the table
+//     const body = dataToExport.map(item => {
+//         const row = [
+//             item.SerialNumber !== lastSerialNumber ? item.SerialNumber : '',
+//             item.AuditArea !== lastAuditArea ? item.AuditArea : '',
+//             item.SpecificArea,
+//             item.ReportObservation,
+//             item.Remarks,
+//             item.Suggestions
+//         ];
+
+//         // Update the last serial number and area name
+//         lastSerialNumber = item.SerialNumber;
+//         lastAuditArea = item.AuditArea;
+
+//         return row;
+//     });
+
+//     // Add the table to the PDF
+//     doc.autoTable({
+//         head: [columns],
+//         body: body,
+    
+//         // Enable cell merging and adjust styles
+//         didDrawCell: (data) => {
+//             if (data.section === 'body') {
+//                 const col = data.column.index;
+//                 const row = data.row.index;
+//                 if (col === 0 || col === 1) {
+//                     const prevRow = body[row - 1];
+//                     if (prevRow && (prevRow[col] === data.cell.text || prevRow[col] === '')) {
+//                         // Check if the cell is part of a merged cell
+//                         if (data.cell.raw === '' || data.cell.raw === prevRow[col]) {
+//                             // Remove the border for merged cells
+//                             data.cell.styles.lineWidth = 0;
+//                             // Center the content of merged cells
+//                             data.cell.styles.halign = 'center';
+//                             data.cell.styles.valign = 'middle';
+//                         } else {
+//                             // Apply the border for non-merged cells
+//                             data.cell.styles.lineWidth = 0.1;
+//                             data.cell.styles.lineColor = [0, 0, 0];
+//                             // Ensure non-merged cells are centered
+//                             data.cell.styles.halign = 'center';
+//                             data.cell.styles.valign = 'middle';
+//                         }
+//                         data.cell.styles.fillColor = [255, 255, 255]; // Make the cell white to merge with the previous one
+//                         data.cell.styles.textColor = [0, 0, 0]; // Set the text color to black
+//                     }
+//                 }
+//             }
+//         },
+//         // Add border lines to the table
+//         styles: {
+//             lineWidth: 0.1, // Adjust the border line width
+//             lineColor: [0, 0, 0], // Set the border line color to black
+//             halign: 'center', // Center the text horizontally
+//             valign: 'middle' // Center the text vertically
+//         },
+//         // Adjust the margin for landscape mode
+//         margin: { top: 20, left: 10, right: 10, bottom: 20 }
+//     });
+    
+//     // Save the PDF
+//     doc.save('audit_data.pdf');
+}
+   
+
+
+
+    /////server side approach:
+
+   // Example: Selecting specific columns and preparing data for server
+   
+
 
 const sendDataAndDownloadPDF = async () => {
     const formattedDate = formatDate(date);
@@ -525,7 +770,30 @@ const sendDataAndDownloadPDF = async () => {
 
             )}
         </div>
-            <button className="action-button" onClick={sendDataAndDownloadPDF}>Download PDF</button>
+        {/* <button
+            className="download-button"
+            onClick={downloadPDF}
+            disabled={!(loader===false)}
+            >
+            {loader?(
+                <span>Downloading</span>
+            ):(
+                <span>Download</span>
+            )}
+        </button> */}
+        {/* <button onClick={handleExport}>Export Data</button> */}
+        <button className="action-button" onClick={sendDataAndDownloadPDF}>Download PDF</button>
+
+
+        {/* <button onClick={handleDownload}>Download PDF</button>
+        <BlobProvider document={<CheckAuditsPDF auditsData={auditsData} date={date} taskId={taskId} />}>
+        {({ blob, url, loading, error }) => {
+            if (!loading && !error) {
+            pdfDownloadRef.current = blob;
+            }
+            return null; // Render nothing, just use the blob for downloading
+        }}
+        </BlobProvider> */}
         </div>
     );
     

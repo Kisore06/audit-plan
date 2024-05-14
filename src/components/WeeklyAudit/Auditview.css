@@ -42,3 +42,7 @@
 .audit-table thead tr {
     background-color: #f2f2f2;
 }
+
+.h3:hover{
+    color: black;
+}

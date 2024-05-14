@@ -70,7 +70,7 @@ const AssignWork = () => {
 
 
     return (
-        <div style={{ paddingTop: '90px', overflow: 'auto' }}>
+        <div style={{ paddingTop: '90px', overflow: 'auto', marginLeft:'10px', marginRight:'10px' }}>
         <h2>Tasks for {formatDate(startDate)} to {formatDate(endDate)}</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>Number of Tasks: {TasksCount}</div>
@@ -87,7 +87,6 @@ const AssignWork = () => {
                         <th>Specific Area</th>
                         <th>Report Observation</th>
                         <th>Remarks</th>
-                        <th>Suggestions</th>
                         <th>Specific Task ID</th>
                         <th>action Taken</th>
                         <th>Progress</th>
@@ -103,7 +102,6 @@ const AssignWork = () => {
                             <td>{task.specific_area}</td>
                             <td><div dangerouslySetInnerHTML={{ __html: task.report_observation }} /></td>
                             <td>{task.remarks}</td>
-                            <td>{task.suggestions}</td>
                             <td>{task.task_id_specific}</td>
                             <td>{task.action_taken}</td>
                             <td>

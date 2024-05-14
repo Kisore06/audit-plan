@@ -6,12 +6,14 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const puppeteer = require('puppeteer');
-
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads/images', express.static('uploads/images'));
+
+app.use('/pdf/pdf', express.static(path.join(__dirname, 'pdf', 'pdf')));
 
 
 
@@ -89,7 +91,7 @@ app.post('/login', async (req, res) => {
 // Endpoint to add new user
 app.post('/register', async (req, res) => {
     console.log(req.body)
-    const { username, password, roleId } = req.body;
+    const { username, password, roleId, firstName, lastName, phoneNumber, staffId } = req.body;
 
     try {
         // Check if the username already exists
@@ -104,8 +106,8 @@ app.post('/register', async (req, res) => {
                 // Hash the password
                 const hashedPassword = await bcrypt.hash(password, 10);
                 // Insert the new user into the database
-                const insertQuery = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
-                db.query(insertQuery, [username, hashedPassword, roleId], (error) => {
+                const insertQuery = 'INSERT INTO users (username, password, role, firstName, lastName, phoneNumber, staffId) VALUES (?, ?, ?, ?, ?, ?, ?)';
+                db.query(insertQuery, [username, hashedPassword, roleId, firstName, lastName, phoneNumber, staffId ], (error) => {
                     if (error) {
                         console.error('Database error:', error);
                         res.status(500).send({ message: 'Database error', error: error.message });
@@ -189,6 +191,79 @@ app.get('/users', (req, res) => {
     });
 });
 
+//get users by id
+app.put('/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { username} = req.body;
+    const query = 'SELECT * FROM users WHERE id = ?';
+    db.query(query, [username, id], (err, result) => {
+        if (err) {
+            console.error('problem in username fetch...', err);
+            res.status(500).send('Error fetching users');
+        } else {
+            res.send(result);
+        }
+    });
+});
+
+//get users by username stored in localstorage
+app.get('/users/:username', (req, res) => {
+    console.log('Fetching user details');
+    const { username } = req.params;
+    const query = 'SELECT firstName, lastName, phoneNumber FROM users WHERE username =?';
+
+    db.query(query, [username], (error, results) => {
+        if (error) {
+            console.error('Problem fetching user details:', error);
+            res.status(500).send('Problem fetching user details');
+        } else {
+            console.log('Fetched user details successfully');
+            if (results.length > 0) {
+                res.send(results[0]);
+            } else {
+                res.status(404).send({ message: 'User not found' });
+            }
+        }
+    });
+});
+
+// Edit users
+app.put('/usersedit/:id', (req, res) => {
+    const { id } = req.params;
+    const { username, firstName, lastName, phoneNumber, staffId } = req.body;
+    // Construct the query string to update multiple fields
+    const query = `
+        UPDATE users 
+        SET username =?, firstName =?, lastName =?, phoneNumber =?, staffId =?
+        WHERE id =?`;
+    // Execute the query with the provided values
+    db.query(query, [username, firstName, lastName, phoneNumber, staffId, id], (err, result) => {
+        if (err) {
+            console.error('Error updating users:', err);
+            res.status(500).send('Error updating users');
+        } else {
+            // If the update is successful, send the result back to the client
+            // Note: Depending on your database, you might want to send a success message or the updated user object
+            res.send(result);
+        }
+    });
+});
+
+    
+// Delete users
+app.delete('/users/:id', (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM users WHERE id = ?';
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting users:', err);
+            res.status(500).send('Error deleting users');
+        } else {
+            res.send(result);
+        }
+    });
+});
+
 // remote-area-weekly
 app.get('/remote_area_weekly', (req, res) => {
     console.log('vanthuten...')
@@ -260,6 +335,31 @@ app.get('/getTaskIdByDate', (req, res) => {
         }
     });
 });
+
+//set specific date for a week in audit form
+app.get('/last-audit-date', (req, res) => {
+    console.log('Fetching last audit date...');
+    const query = 'SELECT MAX(date) AS last_date FROM audit_tasks';
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Error fetching last audit date:', error);
+            res.status(500).send('Error fetching last audit date');
+        } else {
+            console.log('Last audit date fetched successfully');
+            if (Array.isArray(results) && results.length > 0) {
+                const lastDate = results[0].last_date;
+                if (lastDate) {
+                    res.send({ date: lastDate });
+                } else {
+                    res.status(404).send('No audit tasks found');
+                }
+            } else {
+                res.status(404).send('No audit tasks found');
+            }
+        }
+    });
+});
+
 
 
 // audit-form
@@ -443,10 +543,30 @@ app.post('/updateTaskProgress', (req, res) => {
     });
 });
 
-//puppeter pdf download
+// Fetch specific task by date
+app.get('/specific', (req, res) => {
+    const { date } = req.query;
+    if (!date) {
+        return res.status(400).send({ message: 'Date must be provided.' });
+    }
+
+    const query = 'SELECT * FROM specific_task WHERE date = ?';
+    const values = [date];
+
+    db.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        }else {
+            res.send(results);
+        }
+    });
+});
+
+//puppeter pdf download checkAudits
 app.post('/generate-pdf', async (req, res) => {
     try {
-        const { totalAreasCovered, totalObservationsFound, date, taskId, auditsData } = req.body;
+        const { totalAreasCovered, totalObservationsFound, date, taskId,analysisWeek, auditsData } = req.body;
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
 
@@ -465,6 +585,14 @@ app.post('/generate-pdf', async (req, res) => {
             <head>
                 <title>Report</title>
                 <style>
+                    @page {
+                        margin: 1cm; 
+                    }
+                    body {
+                        margin: 1cm; 
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
                     table {
                         border-collapse: collapse;
                         width: 100%;
@@ -473,14 +601,27 @@ app.post('/generate-pdf', async (req, res) => {
                         border: 1px solid black;
                         padding: 8px;
                         text-align: left;
+                        page-break-inside: avoid;
+                        page-break-after: auto;
                     }
                     th {
                         background-color: #f2f2f2;
                     }
+                    img {
+                        display: block;
+                        margin-left: auto;
+                        margin-right: auto;
+                        width: 50%; 
+                    }
+                    tr:last-child {
+                        border-bottom: 1px solid black;
+                    }
                 </style>
             </head>
             <body>
+            <img src="http://localhost:8001/pdf/pdf/logo.png" alt="Logo">
             <h2 style="text-align:center">Office of the IQAC</h2>
+            <h3 style="text-align:center">Remote Area Analysis Report - ${analysisWeek}</h3>
             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                 <div>Audit Date: ${date}</div>
                 <div>Task ID: ${taskId}</div>
@@ -497,7 +638,6 @@ app.post('/generate-pdf', async (req, res) => {
                             <th>Specific Area</th>
                             <th>Report Observation</th>
                             <th>Remarks</th>
-                            <th>Suggestions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -514,7 +654,6 @@ app.post('/generate-pdf', async (req, res) => {
                         <td>${item.SpecificArea}</td>
                         <td>${item.ReportObservation}</td>
                         <td>${item.Remarks}</td>
-                        <td>${item.Suggestions}</td>
                     </tr>
                 `;
             } else {
@@ -525,7 +664,6 @@ app.post('/generate-pdf', async (req, res) => {
                         <td>${item.SpecificArea}</td>
                         <td>${item.ReportObservation}</td>
                         <td>${item.Remarks}</td>
-                        <td>${item.Suggestions}</td>
                     </tr>
                 `;
             }
@@ -555,6 +693,193 @@ app.post('/generate-pdf', async (req, res) => {
     }
 });
 
+//puppeter pdf download specific tasks
+app.post('/generate-pdf2', async (req, res) => {
+    try {
+        const { date, taskId,analysisWeek,completedTasksCount, pendingTasksCount, TasksCount, auditsData } = req.body;
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        const areaCounts = {};
+        auditsData.forEach(item => {
+            if (!areaCounts[item.AuditArea]) {
+                areaCounts[item.AuditArea] = 1;
+            } else {
+                areaCounts[item.AuditArea]++;
+            }
+        });
+
+        // Generate the HTML template with rowspan logic
+        let htmlContent = `
+            <html>
+            <head>
+                <title>Report</title>
+                <style>
+                    @page {
+                        margin: 1cm; 
+                    }
+                    body {
+                        margin: 1cm; 
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 100%;
+                    }
+                    th, td {
+                        border: 1px solid black;
+                        padding: 8px;
+                        text-align: left;
+                        page-break-inside: avoid;
+                        page-break-after: auto;
+                    }
+                    th {
+                        background-color: #f2f2f2;
+                    }
+                    img {
+                        display: block;
+                        margin-left: auto;
+                        margin-right: auto;
+                        width: 50%; // Adjust the width as needed
+                    }
+                    tr:last-child {
+                        border-bottom: 1px solid black;
+                    }
+                </style>
+            </head>
+            <body>
+            <img src="http://localhost:8001/pdf/pdf/logo.png" alt="Logo">
+            <h2 style="text-align:center">Office of the IQAC</h2>
+            <h3 style="text-align:center">Remote Area Analysis Report - ${analysisWeek}</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>Audit Date: ${date}</div>
+                <div>Task ID: ${taskId}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>Number of Tasks: ${TasksCount}</div>
+                <div>Completed Tasks: ${completedTasksCount}</div>
+                <div>Pending Tasks: ${pendingTasksCount}</div>
+            </div>
+            </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Audit Area</th>
+                            <th>Specific Area</th>
+                            <th>Report Observation</th>
+                            <th>Remarks</th>
+                            <th>Task ID Specific</th>
+                            <th>Action Taken</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        let currentAreaName = ''; 
+        let serialNumber = 0;
+
+        auditsData.forEach((item, index) => {
+
+            if (item.AuditArea !== currentAreaName) {
+                currentAreaName = item.AuditArea;
+                serialNumber++;
+            }
+
+            const auditArea = item.AuditArea ;
+            const specificArea = item.SpecificArea;
+            const reportObservation = item.ReportObservation || ''; 
+            const remarks = item.Remarks|| '';
+            const taskIdSpecific = item.TaskIDSpecific || '';
+            const actionTaken = item.ActionTaken || '';
+            const progress = item.Progress || '';
+
+            if (index === 0 || item.AuditArea !== auditsData[index - 1].AuditArea) {
+                htmlContent += `
+                        <tr>
+                            <td rowSpan="${areaCounts[item.AuditArea]}">${serialNumber}</td>
+                            <td rowSpan="${areaCounts[item.AuditArea]}">${auditArea}</td>
+                            <td>${specificArea}</td>
+                            <td>${reportObservation}</td>
+                            <td>${remarks}</td>
+                            <td>${taskIdSpecific}</td>
+                            <td>${actionTaken}</td>
+                            <td>${progress}</td>
+                        </tr>
+                        `;
+            } else {
+                htmlContent += `
+                    <tr>
+                        <td>${specificArea}</td>
+                        <td>${reportObservation}</td>
+                        <td>${remarks}</td>
+                        <td>${taskIdSpecific}</td>
+                        <td>${actionTaken}</td>
+                        <td>${progress}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        htmlContent += `
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        await page.setContent(htmlContent);
+        const pdf = await page.pdf({ format: 'A4', landscape: true });
+
+        await browser.close();
+
+        // Send the PDF back to the client
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Length': pdf.length,
+        });
+        res.send(pdf);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).send('Error generating PDF');
+    }
+});
+
+// app.post('/messages', async (req, res) => {
+//     try {
+//         const { sender_id, recipient_ids, message_content } = req.body;
+
+//         // Validate the data
+//         if (!sender_id || !recipient_ids || !message_content) {
+//             return res.status(400).json({ error: 'Missing required fields' });
+//         }
+
+//         // Loop through recipient_ids and insert a message for each
+//         for (const recipient_id of recipient_ids) {
+//             const query = 'INSERT INTO messages (sender_id, recipient_id, message_content) VALUES (?, ?, ?)';
+//             const values = [sender_id, recipient_id, message_content];
+
+//             db.query(query, values, (err, result) => {
+//                 if (err) {
+//                     console.error(err);
+//                     return res.status(500).json({ error: 'Error inserting message' });
+//                 }
+//             });
+//         }
+
+//         // Respond to the client
+//         res.status(200).json({ message: 'Messages sent successfully' });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// });
+
+
+
+   
 
 // Start the server
 const PORT = process.env.PORT || 8001;
