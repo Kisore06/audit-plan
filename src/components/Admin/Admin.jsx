@@ -4,15 +4,15 @@ import './Admin.css';
 import { useNavigate } from 'react-router-dom';
 import api from "../../utils/api";
 
-const fetchRoles = async () => {
-    try {
-        const response = await axios.get(`${api}/roles`);
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching roles:', error);
-        return [];
-    }
-};
+// const fetchRoles = async () => {
+//     try {
+//         const response = await axios.get(`${api}/roles`);
+//         return response.data;
+//     } catch (error) {
+//         console.error('Error fetching roles:', error);
+//         return [];
+//     }
+// };
 
 const AdminRegistration = () => {
     const [username, setUsername] = useState('');
@@ -37,6 +37,16 @@ const AdminRegistration = () => {
     useEffect(() => {
         fetchRoles().then(setRole);
     }, []);
+
+    const fetchRoles = async () => {
+        try {
+            const response = await axios.get(`${api}/roles`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+            return [];
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -78,6 +88,62 @@ const AdminRegistration = () => {
             window.alert(errorMessage);
         }
     };
+
+    // const toggleSubLines = (title) => {
+    //     setShowSubLines(prevState => ({
+    //       ...prevState,
+    //       [title]: !prevState[title],
+    //     }));
+    // };
+
+
+    // const handleDateChangeAudit = (e) => {
+    //     setSelectedDateAudit(e.target.value);
+    // };
+
+    // const handleView = (area, date) => {
+    //     // Construct the URL for navigation
+    //     const url = `/audit/${area}/${date}`;
+    //     return <Link to={url}><VisibilityIcon/></Link>;
+    // };
+
+//     const handleStartDateChange = (e) => {
+//         setDateRange({ ...dateRange, startDate: e.target.value });
+//     };
+   
+//     const handleEndDateChange = (e) => {
+//         setDateRange({ ...dateRange, endDate: e.target.value });
+//     };
+   
+
+//     const assignTask = async () => {
+//       if (!selectedDateForTask || !taskIdForTask) {
+//           alert('Please select a date and enter a Task ID before proceeding.');
+//           return;
+//       }
+ 
+//       try {
+//           const response = await fetch(`http://localhost:8001/assignTask`, {
+//               method: 'POST',
+//               headers: {
+//                   'Content-Type': 'application/json',
+//               },
+//               body: JSON.stringify({ date: selectedDateForTask, taskId: taskIdForTask }),
+//           });
+ 
+//           if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || 'Failed to assign task.');          }
+ 
+//           alert('Task assigned successfully.');
+//           // Optionally, clear the input fields after successful assignment
+//           setSelectedDateForTask('');
+//           setTaskIdForTask('');
+//       } catch (error) {
+//           console.error('Error:', error);
+//           alert(error.message);
+//       }
+//   };
 
     return (
         <div className="admin-registration-container">

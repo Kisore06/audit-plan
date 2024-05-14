@@ -28,7 +28,7 @@ const WeeklyAudit = () => {
    
     useEffect(() => {
         const userRole = localStorage.getItem('role');
-        if ( userRole !== 'admin') {
+        if ( userRole !== 'executer' && userRole!== 'admin') {
             navigate('/');
         }
         

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Audit.css';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import api from "../../utils/api"
 
@@ -192,6 +193,10 @@ const handleSubmit = async (e) => {
 
         const data = await response.json();
         console.log('Form data submitted successfully:', data);
+        Swal.fire({ // Show SweetAlert popup on successful submission
+            title: "Submitted",
+            icon: "success"
+          });
         window.location.reload();
     } catch (error) {
         console.error('Error submitting form data:', error);

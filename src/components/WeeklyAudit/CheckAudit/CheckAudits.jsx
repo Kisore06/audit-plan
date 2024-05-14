@@ -3,21 +3,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import './CheckAudits.css';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { green, red } from '@mui/material/colors';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormControl from '@mui/material/FormControl';
-import FormLabel from '@mui/material/FormLabel';
 import ImageIcon from '@mui/icons-material/Image';import Modal from '@mui/material/Modal';
 import {Carousel} from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import api from "../../../utils/api";
 import emailjs from '@emailjs/browser';
+
+import { Box, Typography, TextField, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button } from '@mui/material';
+// import nodemailer from 'nodemailer';
 
 
 const CheckAudits = () => {
@@ -33,6 +27,7 @@ const CheckAudits = () => {
     const [selectedSuggestions, setSelectedSuggestions] = useState('');
     const [isFormVisible, setIsFormVisible] = useState(false);
     const formRef = useRef(null);
+    // eslint-disable-next-line no-unused-vars
     const [assignedTaskIds, setAssignedTaskIds] = useState([]);
     const [imageUrls, setImageUrls] = useState([]);
     const [openModal, setOpenModal] = useState(false);
@@ -227,8 +222,8 @@ const CheckAudits = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    date,
-                    taskId,
+                    date: date,
+                    taskId: taskId,
                     auditArea: selectedArea,
                     specificArea: selectedGender,
                     reportObservation: selectedReportObservation,
@@ -278,7 +273,8 @@ const CheckAudits = () => {
             // window.open(mailtoLink, '_blank');
             
         } catch (error) {
-            console.error('Error submitting data:', error);
+            console.error('Error:', error);
+            alert('Failed to assign Specific Task ID and send email. Please try again.');
         }
     };
     
@@ -379,10 +375,6 @@ const sendDataAndDownloadPDF = async () => {
         console.error('There was a problem with your fetch operation:', error);
     }
 };
-
-    
-    
-    
 
     return (
         <div style={{paddingBottom:'50px', marginLeft:'10px', marginRight:'10px'}}>
