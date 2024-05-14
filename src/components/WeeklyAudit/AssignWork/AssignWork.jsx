@@ -36,7 +36,7 @@ const AssignWork = () => {
 
      useEffect(() => {
         const userRole = localStorage.getItem('role');
-        if (userRole !== 'admin' || userRole !== 'executor' ) {
+        if (userRole !== 'admin' && userRole !== 'executer' ) {
             navigate('/');
         }
     

@@ -88,3 +88,51 @@ h3 a:hover {
     margin-left: 20px;
     margin-right: 20px;
 }
+
+.task-card {
+    border: 3px solid #aceceb;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    height: 340px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.task-card button{
+   align-self:flex-end;
+   margin: 0px;
+   margin-top: auto;
+}
+
+
+/* @media screen and (max-width:900px) {
+     .task-flex{
+        width:80%;
+     }
+     .task-card{
+        width:80%;
+     }
+} */
+
+.task-flex{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap:50px;
+    
+}
+
+
+.task-details {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

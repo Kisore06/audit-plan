@@ -6,7 +6,11 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const puppeteer = require('puppeteer');
+// 
+const sgMail = require('@sendgrid/mail');
 
+const path = require('path');
+require('dotenv').config({path:path.resolve(__dirname,'./.env')})
 
 const app = express();
 app.use(cors());
@@ -14,6 +18,7 @@ app.use(bodyParser.json());
 app.use(express.json())
 app.use('/uploads/images', express.static('uploads/images'));
 
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 
 const db = mysql.createConnection({
@@ -31,6 +36,52 @@ const db = mysql.createConnection({
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+
+// // Configure Nodemailer
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     port: 587, // Use port 587 for TLS
+//     secure: false, // true for 465, false for other ports
+//     auth: {
+//         user: 'naveen24sk@gmail.com',
+//         pass: 'naveen24sk'
+//     }
+// });
+
+// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// const msg = {
+//   to: 'naveen24sk@gmail.com', // Change to your recipient
+//   from: 'sknaveenvj@gmail.com', // Use your SendGrid verified sender
+//   subject: 'Sending with SendGrid is Fun',
+//   text: 'and easy to do anywhere, even with Node.js',
+//   html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+// };
+
+// sgMail
+// .send(msg)
+// .then(() => console.log('Email sent'))
+// .catch((error) => console.error(error));
+
+// Function to send email
+async function sendEmail(data) {
+    const msg = {
+        to: 'sknaveenvj@gmail.com', // Change to your recipient
+        from: 'naveen24sk@gmail.com', // Use your SendGrid verified sender
+        subject: 'Audit Form Submission',
+        text: `Date: ${data.date}\nTask ID: ${data.taskId}\nAudit Area: ${data.auditArea}\nSpecific Area: ${data.specificArea}\nReport Observation: ${data.reportObservation}\nRemarks: ${data.remarks}\nSuggestions: ${data.suggestions}\nTask ID Specific: ${data.taskIdSpecific}\nAction Taken: ${data.actionTaken}\nProgress: ${data.progress}`,
+        html: `<p>Date: ${data.date}</p><p>Task ID: ${data.taskId}</p><p>Audit Area: ${data.auditArea}</p><p>Specific Area: ${data.specificArea}</p><p>Report Observation: ${data.reportObservation}</p><p>Remarks: ${data.remarks}</p><p>Suggestions: ${data.suggestions}</p><p>Task ID Specific: ${data.taskIdSpecific}</p><p>Action Taken: ${data.actionTaken}</p><p>Progress: ${data.progress}</p>`,
+    };
+
+    try {
+        await sgMail.send(msg);
+        console.log('Email sent');
+    } catch (error) {
+        console.error('Error sending email: ', error);
+    }
+}
+
 
 // A simple route to test the connection
 app.get('/', (req, res) => {
@@ -58,11 +109,11 @@ const upload = multer({ storage: storage }).fields([
 ]);
 
 
+// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send({ message: 'Internal server error', error: err.message });
 });
-
 
 // Login endpoint with role-based access control
 app.post('/login', async (req, res) => {
@@ -269,20 +320,6 @@ app.get('/getTaskIdByDate', (req, res) => {
     });
 });
 
-// // remote-area-weekly
-// app.get('/remote_area_weekly', (req, res) => {
-//     console.log('vanthuten...')
-//  const query= 'SELECT * FROM remote_area_weekly'
-//  db.query(query, (error, results) => {
-//     if (error) {
-//         console.error('code la prblm...')
-//         res.status(500).send('code la prblm...');
-//     }else {
-//         console.log('vanthuten nu sollu...');
-//         res.send(results);
-//     }
-//  });
-// });
 
 // audit-form
 app.get('/audit', (req, res) => {
@@ -389,30 +426,51 @@ app.get('/audits/by-date-and-area', (req, res) => {
 });
 
 // Submit audit form data
-app.post('/submit-audit-form',(req, res) => {
+app.post('/submit-audit-form', async (req, res) => {
     console.log("triggered")
     console.log(Object.values(req.body))
-    const [ date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress ] = Object.values(req.body);
+    const [ date, taskId, auditArea, specificArea, reportObservation, remarks, suggestions, taskIdSpecific, actionTaken, progress ] = Object.values(req.body);
     
     if (!date || !taskId || !auditArea || !specificArea || !reportObservation || !remarks || !taskIdSpecific || !actionTaken || !progress) {
         return res.status(400).send({ message: 'All fields are required.' });
     }
 
     const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, suggestions, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    const values = [date, taskId, auditArea, specificArea, reportObservation, remarks,suggestions, taskIdSpecific, actionTaken, progress];
+    const values = [date, taskId, auditArea, specificArea, reportObservation, remarks, suggestions, taskIdSpecific, actionTaken, progress];
     console.log(values)
     db.query(query, values, (error, results) => {
         console.log(error)
         if (error) {
             console.log(error)
             console.error('Error inserting audit form data:', error);
-            res.status(500).send({ message: 'Error inserting audit form data', error: error.message });
+            return res.status(500).send({ message: 'Error inserting audit form data', error: error.message });
         } else {
             console.log("success")
-            res.send({ message: 'Audit form data submitted successfully' });
+            // Call sendEmail function here
+            sendEmail(req.body)
+                .then(() => {
+                    res.send({ message: 'Audit form data submitted and email sent successfully' });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    res.status(500).send({ message: 'Error submitting audit form and sending email', error: error.message });
+                });
         }
     });
 });
+
+// Endpoint to send email
+app.post('/send-email', async (req, res) => {
+    const data = req.body;
+    try {
+        await sendEmail(data);
+        res.send({ message: 'Email sent successfully' });
+    } catch (error) {
+        console.error('Error sending email: ', error);
+        res.status(500).send({ message: 'Error sending email', error: error.message });
+    }
+});
+
 
 // Fetch tasks by date range
 app.get('/fetchTasks', (req, res) => {
@@ -426,6 +484,34 @@ app.get('/fetchTasks', (req, res) => {
     const values = [startDate, endDate];
 
     db.query(query, values, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+
+app.get('/fetchAllSpecificTasks', (req, res) => {
+    // Adjusted query to only select tasks where progress is 'In Progress'
+    const query = 'SELECT * FROM specific_task WHERE progress = "In Progress"';
+    db.query(query, (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message });
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+
+app.get('/fetchTaskDetails', (req, res) => {
+    const taskId = req.query.task_id_specific;
+    const query = 'SELECT * FROM specific_task WHERE task_id_specific = ?';
+    db.query(query, [taskId], (error, results) => {
         if (error) {
             console.error('Database error:', error);
             res.status(500).send({ message: 'Database error', error: error.message });
@@ -588,4 +674,3 @@ const PORT = process.env.PORT || 8001;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-

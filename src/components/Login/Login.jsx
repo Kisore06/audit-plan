@@ -54,7 +54,7 @@ const Login = () => {
             }
             else if (role === 'executer'){
                 notifySuccess("Login Successful");
-                navigate('./campus');
+                navigate('/campus');
                 window.location.reload();
             }
             else {

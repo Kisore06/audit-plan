@@ -3,25 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './CheckAudits.css';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { green, red } from '@mui/material/colors';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormControl from '@mui/material/FormControl';
-import FormLabel from '@mui/material/FormLabel';
 import ImageIcon from '@mui/icons-material/Image';import Modal from '@mui/material/Modal';
 import {Carousel} from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import api from "../../../utils/api";
-// import { BlobProvider } from '@react-pdf/renderer';
-// import CheckAuditsPDF from './CheckAuditsPDF';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import 'jspdf-autotable';
+
+import { Box, Typography, TextField, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button } from '@mui/material';
+// import nodemailer from 'nodemailer';
 
 
 const CheckAudits = () => {
@@ -37,10 +29,12 @@ const CheckAudits = () => {
     const [selectedSuggestions, setSelectedSuggestions] = useState('');
     const [isFormVisible, setIsFormVisible] = useState(false);
     const formRef = useRef(null);
+    // eslint-disable-next-line no-unused-vars
     const [assignedTaskIds, setAssignedTaskIds] = useState([]);
     const [imageUrls, setImageUrls] = useState([]);
     const [openModal, setOpenModal] = useState(false);
     const [loader, setLoader] = useState(false);
+
 
     const downloadPDF = () => {
         const capture = document.querySelector('.testDownload');
@@ -94,24 +88,6 @@ const CheckAudits = () => {
     };
     
     
-    // const pdfDownloadRef = useRef(); // New ref for PDF download
-
-    // const handleDownload = () => {
-    //     if (pdfDownloadRef.current) {
-    //        const url = URL.createObjectURL(pdfDownloadRef.current);
-    //        const link = document.createElement('a');
-    //        link.href = url;
-    //        link.setAttribute('download', 'audits.pdf');
-    //        document.body.appendChild(link);
-    //        link.click();
-    //        link.parentNode.removeChild(link);
-    //     } else {
-    //        console.error('Blob is not available for download.');
-    //     }
-    //    };
-       
-
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -255,17 +231,17 @@ const CheckAudits = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         const newTaskId = formData.taskIdSpecific;
-
+    
         // Check if the new taskId already exists
         if (assignedTaskIds.includes(newTaskId)) {
             alert('A taskId with this value has already been assigned. Please choose a different taskId.');
             return;
         }
-
-        const progressValue = formData.progress === 'inprogress' ? 'In Progress' : 'Completed';
-
+    
+        const progressValue = formData.progress === 'inprogress'? 'In Progress' : 'Completed';
+    
         try {
             const response = await fetch(`${api}/submit-audit-form`, {
                 method: 'POST',
@@ -273,8 +249,8 @@ const CheckAudits = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    date:date,
-                    taskId:taskId,
+                    date: date,
+                    taskId: taskId,
                     auditArea: selectedArea,
                     specificArea: selectedGender,
                     reportObservation: selectedReportObservation,
@@ -284,25 +260,54 @@ const CheckAudits = () => {
                     actionTaken: formData.actionTaken,
                     progress: progressValue,
                 }),
-            });          
-
+            });
+    
             if (!response.ok) {
                 throw new Error('Failed to submit data');
             }
-
-            setAssignedTaskIds([...assignedTaskIds, newTaskId]);
-
+    
+            // Assuming the server responds with the submitted data
+            const submittedData = await response.json();
+    
+            // Prepare the data to be sent in the email
+            const emailData = {
+                date: submittedData.date,
+                taskId: submittedData.taskId,
+                auditArea: submittedData.auditArea,
+                specificArea: submittedData.specificArea,
+                reportObservation: submittedData.reportObservation,
+                remarks: submittedData.remarks,
+                suggestions: submittedData.suggestions,
+                taskIdSpecific: submittedData.taskIdSpecific,
+                actionTaken: submittedData.actionTaken,
+                progress: submittedData.progress,
+            };
+    
+            // Send the email
+            await fetch(`${api}/send-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(emailData),
+            });
+    
+            // Handle success
             setIsFormVisible(false);
             setFormData({
                 taskIdSpecific: '',
                 actionTaken: '',
                 progress: 'inprogress',
             });
-            alert("specific Task ID assigned Succesfully!...")
+            alert("Specific Task ID assigned successfully and email sent.");
         } catch (error) {
-            console.error('Error submitting data:', error);
+            console.error('Error:', error);
+            alert('Failed to assign Specific Task ID and send email. Please try again.');
         }
     };
+    
+    
+    
 
     //img view
     const handleOpenModal = (audit) => {
@@ -342,46 +347,6 @@ const CheckAudits = () => {
     }, 0);
 
     ////
-
-    // function exportTableToCSV(data) {
-    //     const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
-    //     const header = Object.keys(data[0]);
-    //     let csv = [];
-    //     let lastSerialNumber = '';
-    
-    //     data.forEach((row, index) => {
-    //         // Prepare the row data
-    //         const values = header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',');
-    //         // Check if the current row's SerialNumber is the same as the last one
-    //         if (row.SerialNumber !== lastSerialNumber) {
-    //             // If not, add the row as is
-    //             csv.push(values);
-    //         } else {
-    //             // If it is, modify the CSV line to merge cells
-    //             // This involves removing the SerialNumber from the CSV line
-    //             const valuesWithoutSerialNumber = values.split(',').slice(1).join(',');
-    //             csv.push(',' + valuesWithoutSerialNumber); // Add a comma at the beginning to align with the header
-    //         }
-    //         lastSerialNumber = row.SerialNumber;
-    //     });
-    
-    //     csv.unshift(header.join(','));
-    //     csv = csv.join('\r\n');
-    
-    //     // Create a Blob from the CSV string
-    //     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    
-    //     // Create a link element
-    //     const link = document.createElement('a');
-    //     const url = URL.createObjectURL(blob);
-    //     link.setAttribute('href', url);
-    //     link.setAttribute('download', 'audit_data.csv');
-    //     link.style.visibility = 'hidden';
-    //     document.body.appendChild(link);
-    //     link.click();
-    //     document.body.removeChild(link);
-    // }
-    
     function exportTableToCSV(data) {
         const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
         const header = Object.keys(data[0]);
@@ -467,85 +432,9 @@ const CheckAudits = () => {
         }).flat(); // Flatten the array to get a single array of objects
     
         exportTableToCSV(dataToExport);
-//         const doc = new jsPDF("l", "mm", "legal");
 
-//     // Define the columns for the table
-//     const columns = ["SerialNumber", "AuditArea", "SpecificArea", "ReportObservation", "Remarks", "Suggestions"];
-
-//     // Initialize variables to track the last serial number and area name
-//     let lastSerialNumber = '';
-//     let lastAuditArea = '';
-
-//     // Prepare the body of the table
-//     const body = dataToExport.map(item => {
-//         const row = [
-//             item.SerialNumber !== lastSerialNumber ? item.SerialNumber : '',
-//             item.AuditArea !== lastAuditArea ? item.AuditArea : '',
-//             item.SpecificArea,
-//             item.ReportObservation,
-//             item.Remarks,
-//             item.Suggestions
-//         ];
-
-//         // Update the last serial number and area name
-//         lastSerialNumber = item.SerialNumber;
-//         lastAuditArea = item.AuditArea;
-
-//         return row;
-//     });
-
-//     // Add the table to the PDF
-//     doc.autoTable({
-//         head: [columns],
-//         body: body,
-    
-//         // Enable cell merging and adjust styles
-//         didDrawCell: (data) => {
-//             if (data.section === 'body') {
-//                 const col = data.column.index;
-//                 const row = data.row.index;
-//                 if (col === 0 || col === 1) {
-//                     const prevRow = body[row - 1];
-//                     if (prevRow && (prevRow[col] === data.cell.text || prevRow[col] === '')) {
-//                         // Check if the cell is part of a merged cell
-//                         if (data.cell.raw === '' || data.cell.raw === prevRow[col]) {
-//                             // Remove the border for merged cells
-//                             data.cell.styles.lineWidth = 0;
-//                             // Center the content of merged cells
-//                             data.cell.styles.halign = 'center';
-//                             data.cell.styles.valign = 'middle';
-//                         } else {
-//                             // Apply the border for non-merged cells
-//                             data.cell.styles.lineWidth = 0.1;
-//                             data.cell.styles.lineColor = [0, 0, 0];
-//                             // Ensure non-merged cells are centered
-//                             data.cell.styles.halign = 'center';
-//                             data.cell.styles.valign = 'middle';
-//                         }
-//                         data.cell.styles.fillColor = [255, 255, 255]; // Make the cell white to merge with the previous one
-//                         data.cell.styles.textColor = [0, 0, 0]; // Set the text color to black
-//                     }
-//                 }
-//             }
-//         },
-//         // Add border lines to the table
-//         styles: {
-//             lineWidth: 0.1, // Adjust the border line width
-//             lineColor: [0, 0, 0], // Set the border line color to black
-//             halign: 'center', // Center the text horizontally
-//             valign: 'middle' // Center the text vertically
-//         },
-//         // Adjust the margin for landscape mode
-//         margin: { top: 20, left: 10, right: 10, bottom: 20 }
-//     });
-    
-//     // Save the PDF
-//     doc.save('audit_data.pdf');
 }
    
-
-
-
     /////server side approach:
 
    // Example: Selecting specific columns and preparing data for server
@@ -601,10 +490,6 @@ const sendDataAndDownloadPDF = async () => {
         console.error('There was a problem with your fetch operation:', error);
     }
 };
-
-    
-    
-    
 
     return (
         <div>
@@ -752,6 +637,7 @@ const sendDataAndDownloadPDF = async () => {
                 <span>Download</span>
             )}
         </button>
+
         <button onClick={handleExport}>Export Data</button>
         <button onClick={sendDataAndDownloadPDF}>Download PDF</button>
 

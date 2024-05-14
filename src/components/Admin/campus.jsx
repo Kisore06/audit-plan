@@ -1,25 +1,52 @@
 import React, {useState, useEffect} from 'react'
 import './campus.css'; 
+import api from '../../utils/api';
+import { Button } from '@mui/material'; // Import Button from Material-UI
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link, useNavigate } from 'react-router-dom';
-// import api from "../../utils/api";
 
 const Campus = () => {
     const navigate = useNavigate();
     const [showSubLines, setShowSubLines] = useState(false);
-    const [selectedDates, setSelectedDates] = useState('');
-    // const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
-    // const [selectedDateForTask, setSelectedDateForTask] = useState('');
-    // const [taskIdForTask, setTaskIdForTask] = useState('');
+    // const [selectedDates, setSelectedDates] = useState('');
+    const [tasks, setTasks] = useState([]);
+     // eslint-disable-next-line
+    const [taskDetails, setTaskDetails] = useState(null);   // const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
     const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
 
     useEffect(() => {
         const userRole = localStorage.getItem('role');
-        if ( userRole !== ( 'executer')) {
+        if ( userRole !== 'executer') {
             navigate('/');
         }
         
     }, [navigate]);
+
+    useEffect(() => {
+        fetch(`${api}/fetchAllSpecificTasks`)
+            .then(response => response.json())
+            .then(data => setTasks(data))
+            .catch(error => console.error('Error fetching tasks:', error));
+    }, []);
+
+    const fetchTaskDetails = (taskId) => {
+        fetch(`${api}/fetchTaskDetails?task_id_specific=${taskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    setTaskDetails(data[0]); // Assuming you want to display the first task detail
+                } else {
+                    console.log('No task details found for the provided task_id_specific.');
+                }
+            })
+            .catch(error => console.error('Error fetching task details:', error));
+    };
+
+    // Example of calling fetchTaskDetails when a task card is clicked
+    const handleTaskCardClick = (taskId) => {
+        fetchTaskDetails(taskId);
+    };
+    
 
     const toggleSubLines = (title) => {
         setShowSubLines(prevState => ({
@@ -28,21 +55,14 @@ const Campus = () => {
         }));
     };
 
-    const handleDateChange = (area, date) => {
-        setSelectedDates(prevDates => ({
-            ...prevDates,
-            [area]: date,
-        }));
-    };
 
-    // const handleDateChangeAudit = (e) => {
-    //     setSelectedDateAudit(e.target.value);
-    // };
 
-    const handleView = (area, date) => {
-        const url = `/campus/${area}/${date}`;
-        return <Link to={url}><VisibilityIcon/></Link>;
-    };
+const handleViewDetail = (area, date) => {
+    // Format the date to 'YYYY-MM-DD' if necessary
+    const formattedDate = date.split('T')[0];
+    const url = `/audit/${area}/${formattedDate}`;
+    navigate(url);
+};
 
     const handleStartDateChange = (e) => {
         setDateRange({ ...dateRange, startDate: e.target.value });
@@ -51,291 +71,69 @@ const Campus = () => {
     const handleEndDateChange = (e) => {
         setDateRange({ ...dateRange, endDate: e.target.value });
     };
-    
 
-//     const assignTask = async () => {
-//       if (!selectedDateForTask || !taskIdForTask) {
-//           alert('Please select a date and enter a Task ID before proceeding.');
-//           return;
-//       }
-  
-//       try {
-//           const response = await fetch(`${api}/assignTask`, {
-//               method: 'POST',
-//               headers: {
-//                   'Content-Type': 'application/json',
-//               },
-//               body: JSON.stringify({ date: selectedDateForTask, taskId: taskIdForTask }),
-//           });
-  
-//           if (!response.ok) {
-//             const errorData = await response.json();
-//             throw new Error(errorData.message || 'Failed to assign task.');          }
-  
-//           alert('Task assigned successfully.');
-//           setSelectedDateForTask('');
-//           setTaskIdForTask('');
-//       } catch (error) {
-//           console.error('Error:', error);
-//           alert(error.message);
-//       }
-//   };
-  
+    
+    const formatdate= (utcDateString)=>{
+        const date = new Date(utcDateString)
+        return date.toLocaleDateString('en-CA');
+    }
+
+     // Integrate the handleProgressUpdate function here
+     const handleProgressUpdate = async (taskId, newProgress) => {
+        const confirmUpdate = window.confirm(`Are you sure you want to update the progress to ${newProgress}?`);
+        if (!confirmUpdate) {
+            return;
+        }
+        try {
+            const response = await fetch(`${api}/updateTaskProgress?taskId=${taskId}&newProgress=${newProgress}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ taskId, newProgress }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to update task progress');
+            }
+            const updatedTask = await response.json();
+            setTasks(tasks.map(task => task.task_id_specific === taskId? updatedTask : task));
+        } catch (error) {
+            console.error('Error updating task progress:', error);
+        }
+    };
+
+    const inProgressTasks = tasks.filter(task => task.progress === "In Progress");
+
+    
        
   return (
     <div style={{ paddingTop: '90px', overflow: 'auto' }}>
     <div>
         <h2 className="he2">Remote Area - Weekly Audit Plan</h2>
+        <p><b>In Complete Tasks:  {inProgressTasks.length}</b></p>
     </div>
-    <div>
-    <h3 className="he3" onClick={() => toggleSubLines('mainAuditorium')}>1. Main Auditorium Backside</h3>
-      {showSubLines['mainAuditorium'] && (
-        <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Main Auditorium Backside - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Main Auditorium Backside - male', selectedDates['Main Auditorium Backside - male'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Main Auditorium Backside - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Main Auditorium Backside - female', selectedDates['Main Auditorium Backside - female'])}
-                </button>
-            </div>
-        </div>
-      )}
+    <div className='task-flex'>
+            {tasks.map(task => (
 
-      <h3 className="he3" onClick={() => toggleSubLines('learningCentre')}>2. Learning Centre Backside - Restroom </h3>
-      {showSubLines['learningCentre'] && (
-        <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Learning Centre Backside - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Learning Centre Backside - male', selectedDates['Learning Centre Backside - male'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Learning Centre Backside - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Learning Centre Backside - female', selectedDates['Learning Centre Backside - female'])}
-                </button>
-            </div>
-        </div>
-      )}
+                <div key={task.task_id_specific} className="task-card" onClick={() => handleTaskCardClick(task.task_id_specific)}>
+                    <div>
+                    <h3>Task ID: {task.task_id_specific}</h3>
+                    <p>Date: {formatdate(task.date)}</p>
+                    {/* <p>Audit Area: {task.audit_area}</p> */}
+                    <p>Area: {task.specific_area}</p>
+                    <p>Action Taken: {task.action_taken}</p>
+                    <p>progress: {task.progress}</p>
+                    </div>
+                    <Button variant="contained" size="small" onClick={() => handleProgressUpdate(task.task_id_specific, "Completed")}>Mark as Completed</Button>
+                    <Button variant="contained" size="small" onClick={() => handleViewDetail(task.specific_area, formatdate(task.date))}>Show Details</Button>
 
-      <h3 className="he3" onClick={() => toggleSubLines('ground')}>3. Near to Football Playground - Restroms </h3>
-      {showSubLines['ground'] && (
-          <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Football Playground Restroom - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Football Playground Restroom - male', selectedDates['Football Playground Restroom - male'])}
-                </button>
+                    {/* Add more task details as needed */}
+                </div>
+            ))}
             </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Football Playground Restroom - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Football Playground Restroom - female', selectedDates['Football Playground Restroom - female'])}
-                </button>
-            </div>
-          </div>
-      )}
-
-      <h3 className="he3" onClick={() => toggleSubLines('sfBlock')}>4. SF block - VIP lounge </h3>
-      {showSubLines['sfBlock'] && (
-        <div className="date-view-container">
-            <input type="date" className="date-input" onChange={(e) => handleDateChange('SF Block VIP Lounge', e.target.value)} />
-            <button className="view-button">
-                {handleView('SF Block VIP Lounge', selectedDates['SF Block VIP Lounge'])}
-            </button>
-        </div>
-      )}
-
-      <h3 className="he3" onClick={() => toggleSubLines('vedanayagam')}>5. Vedanayagam Auditorium - VIP lounge</h3>
-      {showSubLines['vedanayagam'] && (
-          <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Vedanayagam Auditorium VIP Lounge - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Vedanayagam Auditorium VIP Lounge - male', selectedDates['Vedanayagam Auditorium VIP Lounge - male'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Vedanayagam Auditorium VIP Lounge - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Vedanayagam Auditorium VIP Lounge - female', selectedDates['Vedanayagam Auditorium VIP Lounge - female'])}
-                </button>
-            </div>
-          </div>
-      )}
-
-      <h3 className="he3" onClick={() => toggleSubLines('mobile')}>6. Mobile toilet located near to, </h3>
-      {showSubLines['mobile'] && (
-        <div>
-        <h3 className="sub-list">a. New Store Room</h3>
-        <div className="date-view-container">
-            <input type="date" className="date-input" onChange={(e) => handleDateChange('New Store Room', e.target.value)} />
-            <button className="view-button">
-                {handleView('New Store Room', selectedDates['New Store Room'])}
-            </button>
-        </div>
-        <h3 className="sub-list">b. Tennis Ground </h3>
-        <div className="date-view-container">
-            <input type="date" className="date-input" onChange={(e) => handleDateChange('Tennis Ground', e.target.value)} />
-            <button className="view-button">
-                {handleView('Tennis Ground', selectedDates['Tennis Ground'])}
-            </button>
-        </div>
-        <h3 className="sub-list">c. Quarters</h3>
-        <div className="date-view-container">
-            <input type="date" className="date-input" onChange={(e) => handleDateChange('Quarters', e.target.value)} />
-            <button className="view-button">
-                {handleView('Quarters', selectedDates['Quarters'])}
-            </button>
-        </div>
-        </div>
-      )}
-      
-      <h3 className="he3" onClick={() => toggleSubLines('indoor')}>7. Indoor Stadium </h3>
-      {showSubLines['indoor'] && (
-          <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Indoor Stadium - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Indoor Stadium - male', selectedDates['Indoor Stadium - male'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Indoor Stadium - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Indoor Stadium - female', selectedDates['Indoor Stadium - female'])}
-                </button>
-            </div>
-          </div>
-      )}
-      
-      <h3 className="he3" onClick={() => toggleSubLines('parking')}>8. Main Parking - Restrooms </h3>
-      {showSubLines['parking'] && (
-          <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Indoor Stadium - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Indoor Stadium - female', selectedDates['Indoor Stadium - female'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Indoor Stadium - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Indoor Stadium - female', selectedDates['Indoor Stadium - female'])}
-                </button>
-            </div>
-          </div>
-      )}
-      <h3 className="he3" onClick={() => toggleSubLines('hostel')}>9. Boys Hostel Canteen Premises </h3>
-      {showSubLines['hostel'] && (
-          <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Boys Hostel Canteen - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Boys Hostel Canteen - male', selectedDates['Boys Hostel Canteen - male'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Boys Hostel Canteen - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Boys Hostel Canteen - female', selectedDates['Boys Hostel Canteen - female'])}
-                </button>
-            </div>
-          </div>
-      )}
-
-      <h3 className="he3" onClick={() => toggleSubLines('girls-hostel')}>10. Girls Hostel Canteen Premises </h3>
-      {showSubLines['girls-hostel'] && (
-          <div>
-            <h3 className="sub-list">Male</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Girls Hostel Canteen - male', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Girls Hostel Canteen - male', selectedDates['Girls Hostel Canteen - male'])}
-                </button>
-            </div>
-            <h3 className="sub-list">Female</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Girls Hostel Canteen - female', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Girls Hostel Canteen - female', selectedDates['Girls Hostel Canteen - female'])}
-                </button>
-            </div>
-          </div>
-      )}
-
-      <h3 className="he3" onClick={() => toggleSubLines('music-club')}>11. Music Club </h3>
-      {showSubLines['music-club'] && (
-        <div className="date-view-container">
-            <input type="date" className="date-input" onChange={(e) => handleDateChange('Music club', e.target.value)} />
-            <button className="view-button">
-                {handleView('Music club', selectedDates['Music club'])}
-            </button>
-        </div>
-      )}
-
-      <h3 className="he3" onClick={() => toggleSubLines('old-mech')}>12. Near to Old Mechanical Seminar Hall </h3>
-      {showSubLines['old-mech'] && (
-        <div>
-            <h3 className="sub-list">a. Chairman Room & Chief Executive Room</h3>
-            <div className="date-view-container">
-                <input type="date" className="date-input" onChange={(e) => handleDateChange('Chairman Room & Chief Executive Room', e.target.value)} />
-                <button className="view-button">
-                    {handleView('Chairman Room & Chief Executive Room', selectedDates['Chairman Room & Chief Executive Room'])}
-                </button>
-            </div>
-        </div>
-      )}
-
-    <h3 className="he3" onClick={() => toggleSubLines('board-room')}>13. SF Block Board Room </h3>
-    {showSubLines['board-room'] && (
-        <div className="date-view-container">
-            <input type="date" className="date-input" onChange={(e) => handleDateChange('SF Block Board Room', e.target.value)} />
-            <button className="view-button">
-                {handleView('SF Block Board Room', selectedDates['SF Block Board Room'])}
-            </button>
-        </div>
-      )}
-    </div>
-    {/* <div className="button-container">
-    <button className="action-button" onClick={() => toggleSubLines('checkAudits')} >Check Audits</button>
-    {showSubLines['checkAudits'] && (
-          <div className="date-view-audit">
-          <input type="date" value={selectedDateAudit} onChange={handleDateChangeAudit} />
-          <Link className="view-button" to={`/checkAudits/${selectedDateAudit}`}
-           onClick={(e) => {
-                if (!selectedDateAudit) {
-                    e.preventDefault();
-                    alert('Please select a date before proceeding.');
-                }
-            }}>
-            <VisibilityIcon />
-          </Link>
-          </div>
-      )}
-    </div> */}
-
-    {/* view assigned tasks and mark the progress within a date range */}
+            
+        
+   
     <div className="button-container">
     <button className="action-button" onClick={() => toggleSubLines('assignTasks')}>Check Assigned Tasks</button>
     {showSubLines['assignTasks'] && (
@@ -368,7 +166,6 @@ const Campus = () => {
 >
     <VisibilityIcon />
 </Link>
-
             </div>
         )}
     </div>
