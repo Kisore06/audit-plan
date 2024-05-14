@@ -19,12 +19,14 @@ const WeeklyAudit = () => {
     const [cstvisible, setCSTVisible] = useState(false);
 
     //for popup
-    const appElement = document.getElementById('app');
-    if (appElement) {
-        Model.setAppElement(appElement);
-      } else {
-        console.error('App element not found');
-      }
+    useEffect(() => {
+        const appElement = document.getElementById('app');
+        if (appElement) {
+          Model.setAppElement(appElement);
+        } else {
+          console.error('App element not found');
+        }
+      }, []);
    
     useEffect(() => {
         const userRole = localStorage.getItem('role');

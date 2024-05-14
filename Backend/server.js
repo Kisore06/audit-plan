@@ -35,51 +35,6 @@ const db = mysql.createConnection({
 app.use(express.json());
 
 
-// // Configure Nodemailer
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     port: 587, // Use port 587 for TLS
-//     secure: false, // true for 465, false for other ports
-//     auth: {
-//         user: 'naveen24sk@gmail.com',
-//         pass: 'naveen24sk'
-//     }
-// });
-
-// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-// const msg = {
-//   to: 'naveen24sk@gmail.com', // Change to your recipient
-//   from: 'sknaveenvj@gmail.com', // Use your SendGrid verified sender
-//   subject: 'Sending with SendGrid is Fun',
-//   text: 'and easy to do anywhere, even with Node.js',
-//   html: '<strong>and easy to do anywhere, even with Node.js</strong>',
-// };
-
-// sgMail
-// .send(msg)
-// .then(() => console.log('Email sent'))
-// .catch((error) => console.error(error));
-
-// Function to send email
-async function sendEmail(data) {
-    const msg = {
-        to: 'sknaveenvj@gmail.com', // Change to your recipient
-        from: 'naveen24sk@gmail.com', // Use your SendGrid verified sender
-        subject: 'Audit Form Submission',
-        text: `Date: ${data.date}\nTask ID: ${data.taskId}\nAudit Area: ${data.auditArea}\nSpecific Area: ${data.specificArea}\nReport Observation: ${data.reportObservation}\nRemarks: ${data.remarks}\nSuggestions: ${data.suggestions}\nTask ID Specific: ${data.taskIdSpecific}\nAction Taken: ${data.actionTaken}\nProgress: ${data.progress}`,
-        html: `<p>Date: ${data.date}</p><p>Task ID: ${data.taskId}</p><p>Audit Area: ${data.auditArea}</p><p>Specific Area: ${data.specificArea}</p><p>Report Observation: ${data.reportObservation}</p><p>Remarks: ${data.remarks}</p><p>Suggestions: ${data.suggestions}</p><p>Task ID Specific: ${data.taskIdSpecific}</p><p>Action Taken: ${data.actionTaken}</p><p>Progress: ${data.progress}</p>`,
-    };
-
-    try {
-        await sgMail.send(msg);
-        console.log('Email sent');
-    } catch (error) {
-        console.error('Error sending email: ', error);
-    }
-}
-
-
 // A simple route to test the connection
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -541,29 +496,8 @@ app.post('/submit-audit-form', async (req, res) => {
             return res.status(500).send({ message: 'Error inserting audit form data', error: error.message });
         } else {
             console.log("success")
-            // Call sendEmail function here
-            sendEmail(req.body)
-                .then(() => {
-                    res.send({ message: 'Audit form data submitted and email sent successfully' });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    res.status(500).send({ message: 'Error submitting audit form and sending email', error: error.message });
-                });
         }
     });
-});
-
-// Endpoint to send email
-app.post('/send-email', async (req, res) => {
-    const data = req.body;
-    try {
-        await sendEmail(data);
-        res.send({ message: 'Email sent successfully' });
-    } catch (error) {
-        console.error('Error sending email: ', error);
-        res.status(500).send({ message: 'Error sending email', error: error.message });
-    }
 });
 
 
@@ -590,7 +524,6 @@ app.get('/fetchTasks', (req, res) => {
 
 
 app.get('/fetchAllSpecificTasks', (req, res) => {
-    // Adjusted query to only select tasks where progress is 'In Progress'
     const query = 'SELECT * FROM specific_task WHERE progress = "In Progress"';
     db.query(query, (error, results) => {
         if (error) {

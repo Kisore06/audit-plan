@@ -175,7 +175,7 @@ const AdminRegistration = () => {
                         <input type="text" id="staffId" value={staffId} onChange={(e) => setStaffId(e.target.value)} placeholder="Staff ID" required />
                     </div>
                 </div>
-                <button type="submit">Register</button>
+                <button className="action-button" type="submit">Register</button>
                 {error && <div className="error-message">{error}</div>}
             </form>
         </div>

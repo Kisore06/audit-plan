@@ -39,7 +39,6 @@ function App() {
     <div id="app">
     <Header/>
       {/* {location.pathname !== '/' && <Header/>} */}
-    <div>
       <ToastContainer />
       {location.pathname !== '/' && <Header/>}
       <Routes>
@@ -55,7 +54,6 @@ function App() {
         <Route path="/specificTasks/:date" element={<SpecificTask />} />
       </Routes>
       {location.pathname !== '/' && <Footer/>}
-    </div>
     </div>
  );
 }
