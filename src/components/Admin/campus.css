@@ -37,14 +37,12 @@ h3 a:hover {
 }
 
 .view-button {
-    background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
 }
 
 .view-button {
-    background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
@@ -75,9 +73,9 @@ h3 a:hover {
     transition: background-color 0.3s ease;
 }
 
-.action-button:hover {
+/* .action-button:hover {
     background-color: #0056b3;
-}
+} */
 
 .date-view-audit{
     margin-left: 20px;
