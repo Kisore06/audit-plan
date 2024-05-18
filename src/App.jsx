@@ -14,6 +14,7 @@ import SpecificTask from './components/WeeklyAudit/SpecificTask/SpecificTAsk';
 import UserDetails from './components/Users/UserDetails';
 import { ToastContainer } from 'react-toastify';
 import Campus from './components/Admin/campus';
+import AreaAudit from './components/WeeklyAudit/AreaAudit/AreaAudit';
 
 function App() {
  const location = useLocation();
@@ -44,6 +45,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/week" element={<WeeklyAudit />} />
+        <Route path="/area-audit" element={<AreaAudit />} />
         <Route path="/admin-register" element={<AdminRegistration />} />
         <Route path="/user-details" element={<UserDetails />} />
         <Route path="/audit" element={<Audit/>}/>

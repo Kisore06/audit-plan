@@ -7,9 +7,9 @@
     align-items: center;
     justify-content: center;
     padding: 10px;
-    background-color: #efd9f5;
+    background-color: #fbf0ff;
     z-index: 1000;
-    border-bottom: 2px solid #ccc;  
+    border-bottom: 2px solid #E6EEF5;  
 }
 
 .header-container {

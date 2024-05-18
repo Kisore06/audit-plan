@@ -2,6 +2,7 @@
     padding-Top: 90px;
     overflow: auto;
     margin-left: 40px;
+    margin-bottom: 210px;
 }
 .he2 {
     text-align: center;
@@ -115,8 +116,10 @@ h3 a:hover {
     align-items: center;
     gap: 30px; 
     margin-top: 40px;
+    margin-bottom: 40px;
     margin-left: 10px;
     margin-right: 20px;
+    flex-wrap: wrap;
   }
   
   .flex-item {
@@ -158,6 +161,7 @@ h3 a:hover {
     }
     .weekly{
         margin-left: 5px;
+        margin-bottom: 40px;
     }
 }
   

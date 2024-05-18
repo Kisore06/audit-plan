@@ -10,9 +10,10 @@ const Campus = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
      // eslint-disable-next-line
-    const [taskDetails, setTaskDetails] = useState(null);   // const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
+    const [taskDetails, setTaskDetails] = useState(null);
     const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
     const [cstvisible, setCSTVisible] = useState(false);
+
 
 
     //for popup
@@ -39,26 +40,6 @@ const Campus = () => {
             .then(data => setTasks(data))
             .catch(error => console.error('Error fetching tasks:', error));
     }, []);
-
-    const fetchTaskDetails = (taskId) => {
-        fetch(`${api}/fetchTaskDetails?task_id_specific=${taskId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    setTaskDetails(data[0]); // Assuming you want to display the first task detail
-                } else {
-                    console.log('No task details found for the provided task_id_specific.');
-                }
-            })
-            .catch(error => console.error('Error fetching task details:', error));
-    };
-
-    // Example of calling fetchTaskDetails when a task card is clicked
-    const handleTaskCardClick = (taskId) => {
-        fetchTaskDetails(taskId);
-    };
-
-
 
 
 const handleViewDetail = (area, date) => {
@@ -101,42 +82,44 @@ const handleViewDetail = (area, date) => {
             }
             const updatedTask = await response.json();
             setTasks(tasks.map(task => task.task_id_specific === taskId? updatedTask : task));
+            window.location.reload(true);
         } catch (error) {
             console.error('Error updating task progress:', error);
         }
     };
 
     const inProgressTasks = tasks.filter(task => task.progress === "In Progress");
-
-    
-       
+ 
   return (
-    <div style={{ paddingTop: '90px', overflow: 'auto' }}>
+    <div style={{ paddingTop: '90px', overflow: 'auto', marginLeft:'30px', marginRight:'30px', marginBottom:'30px' }}>
     <div>
         <h2 className="he2">Remote Area - Weekly Audit Plan</h2>
-        <p><b>In Complete Tasks:  {inProgressTasks.length}</b></p>
+        <p><b>In Progress Tasks:  {inProgressTasks.length}</b></p>
     </div>
     <div className='task-flex'>
             {tasks.map(task => (
 
-                <div key={task.task_id_specific} className="task-card" onClick={() => handleTaskCardClick(task.task_id_specific)}>
+                <div 
+                key={task.task_id_specific} 
+                className="task-card" 
+                >
                     <div>
                     <h3>Task ID: {task.task_id_specific}</h3>
-                    <p>Date: {formatdate(task.date)}</p>
+                    <p>{formatdate(task.date)}</p>
                     {/* <p>Audit Area: {task.audit_area}</p> */}
-                    <p>Area: {task.specific_area}</p>
-                    <p>Action Taken: {task.action_taken}</p>
-                    <p>progress: {task.progress}</p>
+                    <p>{task.specific_area}</p>
+                    <p style={{maxWidth:'290px'}}>{task.action_taken}</p>
+                    <p>Status: {task.progress}</p>
                     </div>
-                    <Button variant="contained" size="small" onClick={() => handleProgressUpdate(task.task_id_specific, "Completed")}>Mark as Completed</Button>
                     <Button variant="contained" size="small" onClick={() => handleViewDetail(task.specific_area, formatdate(task.date))}>Show Details</Button>
+                    <Button variant="contained" size="small" onClick={() => handleProgressUpdate(task.task_id_specific, "Completed")}>Mark as Completed</Button>
 
                     {/* Add more task details as needed */}
                 </div>
             ))}
             </div>
             
-        <div className="flex-container">
+        <div className="flex-container" style={{marginBottom:'20px'}}>
         <div className="flex-item" onClick={() => setCSTVisible(true)}>Check Complete Specific Tasks</div>
         <Model isOpen={cstvisible} onRequestClose={()=>setCSTVisible(false)} style={
             {content:{

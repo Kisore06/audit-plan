@@ -74,41 +74,36 @@ h3 a:hover {
 }
 
 .task-card {
-    border: 3px solid #aceceb;
-    border-radius: 5px;
-    padding: 20px;
+    /* border: 3px solid #aceceb; */
+    border-radius: 10px;
+    padding: 30px;
     margin-bottom: 20px;
     cursor: pointer;
-    height: 340px;
-    width: 200px;
+    width: 17%;
     display: flex;
     flex-direction: column;
     gap: 3px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    background-color: #F0F8FF;
+    overflow: hidden;
+    min-height: 100%;
 }
 
 .task-card button{
    align-self:flex-end;
    margin: 0px;
    margin-top: auto;
+   margin-top: 10px;
 }
-
-
-/* @media screen and (max-width:900px) {
-     .task-flex{
-        width:80%;
-     }
-     .task-card{
-        width:80%;
-     }
-} */
 
 .task-flex{
     display: flex;
     justify-content: flex-start;
-    align-items: center;
-    justify-content: space-around;
+    align-items: stretch;
     flex-wrap: wrap;
     gap:50px;
+    margin-left: 30px;
+    margin-right: 20px;
     
 }
 
@@ -119,4 +114,31 @@ h3 a:hover {
     padding: 20px;
     margin-top: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+@media screen and (max-width:1330px) {
+
+    .task-card{
+       width:25%;
+    }
+}
+@media screen and (max-width:1230px) {
+
+    .task-card{
+       width:40%;
+    }
+}
+@media screen and (max-width:960px) {
+
+    .task-card{
+       width:34%;
+    }
+}
+
+@media screen and (max-width:630px) {
+
+    .task-card{
+       width:75%;
+    }
 }

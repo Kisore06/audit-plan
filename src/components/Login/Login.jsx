@@ -5,7 +5,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import './Login.css'; // Import the CSS file
+import './Login.css'; 
 import '../../Assets/header/bitFullLogo.png';
 import '../../Assets/header/13.png';
 import api from "../../utils/api";
@@ -74,13 +74,13 @@ const Login = () => {
 
     return (
         <div className='total-login-page'>
-            <ToastContainer />
+            <ToastContainer />  
             <div className='total-login-card'>
                 <div className='login-form-flex'>
                     <div className='card-to-arrange'>
                         {error && <div className="error-message">{error}</div>}
                         <form className="login-form" onSubmit={handleSubmit}>
-                            <div className="login-title">LOGIN</div>
+                            <div className="login-title">Audit Manager</div>
                             <TextField
                                 fullWidth
                                 id="outlined-basic"
@@ -90,6 +90,7 @@ const Login = () => {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
+                                style={{marginBottom:'20px'}}
                             />
                             <TextField
                                 fullWidth
