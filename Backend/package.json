@@ -24,7 +24,7 @@
     "mysql2": "^3.9.4",
     "nodemailer": "^6.9.13",
     "path-browserify": "^1.0.1",
-    "puppeteer": "^22.7.1",
+    "puppeteer": "^22.8.2",
     "stream-browserify": "^3.0.0"
   }
 }

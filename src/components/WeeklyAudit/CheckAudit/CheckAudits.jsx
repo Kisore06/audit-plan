@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import './CheckAudits.css';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
@@ -8,15 +8,16 @@ import ImageIcon from '@mui/icons-material/Image';import Modal from '@mui/materi
 import {Carousel} from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import api from "../../../utils/api";
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import 'jspdf-autotable';
-
+import AppLayout from '../../AppLayout';
+import emailjs from '@emailjs/browser';
 import { Box, Typography, TextField, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, Button } from '@mui/material';
 // import nodemailer from 'nodemailer';
 
+function CheckAudits(){
+    return <AppLayout rId={1} body={<Body />}/>
+}
 
-const CheckAudits = () => {
+const Body = () => {
     const { date } = useParams();
     const [taskId, setTaskId] = useState('');
     const [areaNames, setAreaNames] = useState([]);
@@ -33,61 +34,9 @@ const CheckAudits = () => {
     const [assignedTaskIds, setAssignedTaskIds] = useState([]);
     const [imageUrls, setImageUrls] = useState([]);
     const [openModal, setOpenModal] = useState(false);
-    const [loader, setLoader] = useState(false);
+    const [specificTasksData, setSpecificTasksData] = useState([])
 
 
-    const downloadPDF = () => {
-        const capture = document.querySelector('.testDownload');
-        const tableCapture = document.querySelector('.audit-table'); // Assuming .audit-table is the class of your table
-        setLoader(true);
-    
-        // Capture both the div and the table
-        Promise.all([
-            html2canvas(capture),
-            html2canvas(tableCapture)
-        ]).then(([divCanvas, tableCanvas]) => {
-            const divImgData = divCanvas.toDataURL('image/png');
-            const tableImgData = tableCanvas.toDataURL('image/png');
-    
-            const margin = 10; // Margin in mm on both sides
-            const availableWidth = 297 - 2 * margin; // A4 width in mm for landscape minus the margins
-            const imgWidth = (divCanvas.width * availableWidth) / divCanvas.width;
-            const imgHeight = (divCanvas.height * imgWidth) / divCanvas.width;
-            const tableImgWidth = (tableCanvas.width * availableWidth) / tableCanvas.width;
-            const tableImgHeight = (tableCanvas.height * tableImgWidth) / tableCanvas.width;
-    
-            const doc = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape, 'a4' for page format
-            const pageHeight = doc.internal.pageSize.getHeight();
-            let heightLeft = imgHeight + tableImgHeight; // Total height of both the div and the table
-            let position = 0;
-    
-            // Adjust the position to account for the left margin
-            const adjustedPosition = margin;
-    
-            // Add the div content
-            doc.addImage(divImgData, 'PNG', adjustedPosition, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-    
-            // Add the table content
-            position = heightLeft - tableImgHeight;
-            doc.addPage();
-            doc.addImage(tableImgData, 'PNG', adjustedPosition, position, tableImgWidth, tableImgHeight);
-            heightLeft -= pageHeight;
-    
-            // Add additional pages if the content exceeds one page
-            while (heightLeft >= 0) {
-                position = heightLeft - tableImgHeight;
-                doc.addPage();
-                doc.addImage(tableImgData, 'PNG', adjustedPosition, position, tableImgWidth, tableImgHeight);
-                heightLeft -= pageHeight;
-            }
-    
-            setLoader(false);
-            doc.save('Check Audit.pdf');
-        });
-    };
-    
-    
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -154,21 +103,22 @@ const CheckAudits = () => {
                 console.error('Error fetching taskId:', error);
             }
         };
+
+        const fetchSpecificTasksData = async () => {
+            try {
+              const response = await fetch(`${api}/specific?date=${date}`);
+              const data = await response.json();
+                setSpecificTasksData(data);
+            } catch (error) {
+              console.error('Error fetching specific tasks data:', error);
+            }
+          };
         
 
         fetchAreaNamesAndAudits();
         fetchTaskId();
+        fetchSpecificTasksData();
     }, [date]);
-
-    const handleCellChange = (e, areaName, areaGender, field) => {
-        const updatedAuditsData = auditsData.map(audit => {
-            if (audit.area_name === areaName && audit.area_gender === areaGender) {
-                return { ...audit, [field]: e.target.value };
-            }
-            return audit;
-        });
-        setAuditsData(updatedAuditsData);
-    };
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -177,6 +127,21 @@ const CheckAudits = () => {
         const year = date.getFullYear();
         return `${day}-${month}-${year}`;
     };
+
+    //week number
+    const parsedDate = new Date(date);
+
+    // Extract the month and year
+    const month = parsedDate.toLocaleString('default', { month: 'long' });
+    const year = parsedDate.getFullYear();
+
+    // Calculate the week number of the month
+    const firstDayOfMonth = new Date(year, parsedDate.getMonth(), 1);
+    const pastDaysOfMonth = (parsedDate - firstDayOfMonth) / 86400000;
+    const weekNumber = Math.ceil((pastDaysOfMonth + firstDayOfMonth.getDay() + 1) / 7);
+
+    // Format the month, year, and week number
+    const analysisWeek = `${month} ${year} (week ${weekNumber})`;
 
     const generateSerialNumbers = () => {
         let serialNumber = 1;
@@ -214,7 +179,7 @@ const CheckAudits = () => {
         return 'No data found.';
     };
 
-    //another useRef for closing the form when i click outside of it
+    //another useEffect for closing the form when i click outside of it
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (formRef.current && !formRef.current.contains(event.target)) {
@@ -232,13 +197,24 @@ const CheckAudits = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
     
-        const newTaskId = formData.taskIdSpecific;
-    
-        // Check if the new taskId already exists
-        if (assignedTaskIds.includes(newTaskId)) {
-            alert('A taskId with this value has already been assigned. Please choose a different taskId.');
+        const existingAssignment = specificTasksData.find(assignment => 
+            assignment.task_id_specific === formData.taskIdSpecific
+          );
+
+        const otherTaskForSameArea = specificTasksData.find(assignment => {
+            return assignment.specific_area === selectedGender && formatDate(assignment.date) === formatDate(date);
+        });
+                
+        if (existingAssignment) {
+            alert('A specific task ID of this value has already been assigned!');
             return;
         }
+        if (otherTaskForSameArea) {
+        alert("Another task has already been submitted for this area on this date.");
+        return; 
+        }
+    
+        const newTaskId = formData.taskIdSpecific;
     
         const progressValue = formData.progress === 'inprogress'? 'In Progress' : 'Completed';
     
@@ -260,53 +236,50 @@ const CheckAudits = () => {
                     actionTaken: formData.actionTaken,
                     progress: progressValue,
                 }),
-            });
+            });          
     
             if (!response.ok) {
                 throw new Error('Failed to submit data');
             }
     
-            // Assuming the server responds with the submitted data
-            const submittedData = await response.json();
+            // Update the assignedTaskIds state to include the new task ID and area_gender
+            setAssignedTaskIds([...assignedTaskIds, { taskId: newTaskId, area_gender: selectedGender, date: date }]);
     
-            // Prepare the data to be sent in the email
-            const emailData = {
-                date: submittedData.date,
-                taskId: submittedData.taskId,
-                auditArea: submittedData.auditArea,
-                specificArea: submittedData.specificArea,
-                reportObservation: submittedData.reportObservation,
-                remarks: submittedData.remarks,
-                suggestions: submittedData.suggestions,
-                taskIdSpecific: submittedData.taskIdSpecific,
-                actionTaken: submittedData.actionTaken,
-                progress: submittedData.progress,
+
+            const templateParams ={
+                from_name: 'Kishore.R',
+                from_email:' Kishore.cb20@bitsathy.ac.in',
+                to_name: 'KISHORE R',
+                message: `The action taken was: ${formData.actionTaken} and the specific area is: ${selectedGender}.`,
             };
-    
-            // Send the email
-            await fetch(`${api}/send-email`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(emailData),
-            });
-    
-            // Handle success
+            emailjs.send('service_nil48bf', 'template_bn0iql4', templateParams, 'Id7VjWrFQJNXniBq6')
+             .then((result) => {
+                    alert('Email successfully sent!');
+                }, (error) => {
+                    alert('Failed to send email:', error);
+                });
+                
             setIsFormVisible(false);
             setFormData({
                 taskIdSpecific: '',
                 actionTaken: '',
                 progress: 'inprogress',
             });
-            alert("Specific Task ID assigned successfully and email sent.");
+            alert("Specific Task ID assigned Successfully...");
+            
+                        // const recipient = 'dalekishore002@gmail.com'; 
+            // const subject = encodeURIComponent('Specific Task ID Assigned'); 
+            // const body = encodeURIComponent('New TAsks are assigned for this week. Kindly check the website for updates.'); 
+
+            // const mailtoLink = `mailto:${recipient}?subject=${subject}&body=${body}`;
+        
+            // window.open(mailtoLink, '_blank');
+            
         } catch (error) {
             console.error('Error:', error);
             alert('Failed to assign Specific Task ID and send email. Please try again.');
         }
     };
-    
-    
     
 
     //img view
@@ -344,127 +317,42 @@ const CheckAudits = () => {
             }
         }
         return count + badRemarksCount;
-    }, 0);
+    }, 0);  
+    
+    
+/////server side approach:
 
-    ////
-    function exportTableToCSV(data) {
-        const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
-        const header = Object.keys(data[0]);
-        let csv = [];
-        let lastSerialNumber = '';
-        let lastAuditArea = '';
-    
-        // Prepare the CSV header
-        csv.push(header.join(','));
-    
-        data.forEach((row, index) => {
-            // Prepare the row data
-            const values = header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',');
-            let csvLine = '';
-    
-            // Check if the current row's SerialNumber is the same as the last one
-            if (row.SerialNumber !== lastSerialNumber) {
-                // If not, add the SerialNumber to the CSV line
-                csvLine += row.SerialNumber + ',';
-                lastSerialNumber = row.SerialNumber;
-            } else {
-                // If it's the same, add an empty field for SerialNumber
-                csvLine += ',';
-            }
-    
-            // Check if the current row's AuditArea is the same as the last one
-            if (row.AuditArea !== lastAuditArea) {
-                // If not, add the AuditArea to the CSV line
-                csvLine += row.AuditArea + ',';
-                lastAuditArea = row.AuditArea;
-            } else {
-                // If it's the same, add an empty field for AuditArea
-                csvLine += ',';
-            }
-    
-            // Add the rest of the row data, excluding the SerialNumber and AuditArea
-            const rowData = values.split(',').slice(2).join(',');
-            csvLine += rowData;
-    
-            // Add the CSV line to the CSV array
-            csv.push(csvLine);
-        });
-    
-        csv = csv.join('\r\n');
-    
-        // Create a Blob from the CSV string
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    
-        // Create a link element
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'audit_data.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-    
-    
-    const handleExport = () => {
-        // Assuming `processedAuditsData` is your data source
-        const dataToExport = Object.entries(processedAuditsData).map(([areaName, areaGenders]) => {
+// Example: Selecting specific columns and preparing data for server
+
+const sendDataAndDownloadPDF = async () => {
+    const formattedDate = formatDate(date);
+
+    const dataToSend = {
+        totalAreasCovered,
+        totalObservationsFound,
+        date:formattedDate,
+        taskId,
+        analysisWeek,
+        auditsData:Object.entries(processedAuditsData || {}).map(([areaName, areaGenders]) => {
+        // Check if areaGenders is defined and is an object before proceeding
+        if (areaGenders && typeof areaGenders === 'object') {
             return Object.entries(areaGenders).map(([gender, audits]) => {
-                // Find the auditData for the current gender
                 const auditData = auditsData.find(audit => audit.area_name === gender);
-    
-                // Safely access properties of auditData
-                const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
-                const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
-                const suggestions = auditData ? auditData.suggestion || 'Nil' : 'Nil';
-    
                 return {
                     SerialNumber: serialNumbers[areaName],
                     AuditArea: areaName,
                     SpecificArea: gender,
-                    ReportObservation: reportObservation,
-                    Remarks: remarksString,
-                    Suggestions: suggestions,
-                    // Add any other fields you need
+                    ReportObservation: auditData ? determineReportObservation(auditData) : 'No data found.',
+                    Remarks: auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '',
+                    Suggestions: auditData ? auditData.suggestion || '' : ''
                 };
             });
-        }).flat(); // Flatten the array to get a single array of objects
-    
-        exportTableToCSV(dataToExport);
+        }
+        // If areaGenders is not defined or not an object, return an empty array or handle accordingly
+        return [];
+    }).flat(), // Use .flat() to flatten the array of arrays into a single array
+    };
 
-}
-   
-    /////server side approach:
-
-   // Example: Selecting specific columns and preparing data for server
-   const dataToSend = {
-    totalAreasCovered,
-    totalObservationsFound,
-    date,
-    taskId,
-    auditsData:Object.entries(processedAuditsData || {}).map(([areaName, areaGenders]) => {
-    // Check if areaGenders is defined and is an object before proceeding
-    if (areaGenders && typeof areaGenders === 'object') {
-        return Object.entries(areaGenders).map(([gender, audits]) => {
-            const auditData = auditsData.find(audit => audit.area_name === gender);
-            return {
-                SerialNumber: serialNumbers[areaName],
-                AuditArea: areaName,
-                SpecificArea: gender,
-                ReportObservation: auditData ? determineReportObservation(auditData) : 'No data found.',
-                Remarks: auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '',
-                Suggestions: auditData ? auditData.suggestion || 'Nil' : 'Nil'
-            };
-        });
-    }
-    // If areaGenders is not defined or not an object, return an empty array or handle accordingly
-    return [];
-}).flat(), // Use .flat() to flatten the array of arrays into a single array
-};
-
-
-const sendDataAndDownloadPDF = async () => {
     try {
         const response = await fetch(`${api}/generate-pdf`, {
             method: 'POST',
@@ -482,7 +370,7 @@ const sendDataAndDownloadPDF = async () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'report.pdf');
+        link.setAttribute('download', `Report-${analysisWeek}.pdf`);
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
@@ -492,10 +380,13 @@ const sendDataAndDownloadPDF = async () => {
 };
 
     return (
-        <div>
+        <div style={{paddingBottom:'50px', marginLeft:'10px', marginRight:'10px'}}>
         <div style={{ paddingTop: '90px', overflow: 'auto' }}>
         <div className="testDownload">
-        <h2>Check Audits</h2>
+        <div style={{ textAlign: "center" }}>
+            <h2>Check Audits</h2>
+            <h4 >Remote Area Analysis Report - {analysisWeek}</h4>
+        </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <div>Audit Date: {formatDate(date)}</div>
                 <div>Task ID: {taskId}</div>
@@ -525,15 +416,18 @@ const sendDataAndDownloadPDF = async () => {
                             const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
                             const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
                             const isBadRemark = remarksString.split(',').some(remark => remark.trim() === 'bad');
-                            const suggestions = auditData ? auditData.suggestion || 'Nil' : 'Nil';
+                            const suggestions = auditData ? auditData.suggestion || '' : '';
 
                             return (
                                 <tr key={`${areaName}-${gender}`}>
                                     {genderIndex === 0 && <td rowSpan={Object.keys(areaGenders).length}>{serialNumbers[areaName]}</td>}
                                     {genderIndex === 0 && <td rowSpan={Object.keys(areaGenders).length}>{areaName}</td>}
-                                    <td>{gender}</td>
+                                    <td>
+                                        <Link style={{textDecoration:'none', color:'black'}} to={`/audit/${gender}/${date}`}>{gender}</Link>
+                                    </td>
                                     <td className="report-observation" dangerouslySetInnerHTML={{ __html: reportObservation }}></td>
-                                    <td><input type="text" value={remarksString} onChange={(e) => handleCellChange(e, areaName, gender, 'remarks')} /></td>
+                                    {/* <td><input type="text" value={remarksString} onChange={(e) => handleCellChange(e, areaName, gender, 'remarks')} /></td> */}
+                                    <td>{remarksString}</td>
                                     <td>{suggestions}</td>
                                     <td>
                                     {isBadRemark && ( 
@@ -626,31 +520,7 @@ const sendDataAndDownloadPDF = async () => {
 
             )}
         </div>
-        <button
-            className="receipt-modal-download-button"
-            onClick={downloadPDF}
-            disabled={!(loader===false)}
-            >
-            {loader?(
-                <span>Downloading</span>
-            ):(
-                <span>Download</span>
-            )}
-        </button>
-
-        <button onClick={handleExport}>Export Data</button>
-        <button onClick={sendDataAndDownloadPDF}>Download PDF</button>
-
-
-        {/* <button onClick={handleDownload}>Download PDF</button>
-        <BlobProvider document={<CheckAuditsPDF auditsData={auditsData} date={date} taskId={taskId} />}>
-        {({ blob, url, loading, error }) => {
-            if (!loading && !error) {
-            pdfDownloadRef.current = blob;
-            }
-            return null; // Render nothing, just use the blob for downloading
-        }}
-        </BlobProvider> */}
+            <button className="action-button" onClick={sendDataAndDownloadPDF}>Download PDF</button>
         </div>
     );
     

@@ -1,57 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import { MenuRounded} from "@mui/icons-material";
 import './Header.css';
-import logo from '../../Assets/header/Bannari_Amman_Institute_of_Technology_logo.png';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import { useNavigate } from 'react-router-dom';
+import Logo from "../../Assets/header/Bannari_Amman_Institute_of_Technology_logo.png";
+// import "./style.css";
 
-const Header = () => {
- const navigate = useNavigate();
- const [isLoggedIn, setIsLoggedIn] = useState(false);
- const [username, setUsername] = useState('');
+function Header(props) {
 
- useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('role');
-    if (storedUsername && storedRole) {
-      setUsername(storedUsername);
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-      setUsername('');
-    }
- }, []);
-
- const handleLogout = () => {
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('loginTime');
-    setIsLoggedIn(false);
-    setUsername('');
-    navigate('/');
-    window.location.reload();
- };
-
-
- return (
-    <header className="header">
-      <div className="header-container">
-        <img src={logo} alt="Logo" className="logo" />
-        <h1>Audit Plan</h1>
-        {isLoggedIn && (
-          <div className="user-info">
-            <div className="dropdown">
-              <PersonOutlineIcon />
-              <div className="dropdown-content">
-                <p style={{paddingLeft:'10px'}}> {username} </p>
-                <a href="/" onClick={handleLogout}>Logout</a>
-              </div>
-            </div>
+  return (
+    <div
+      className="app-topbar"
+      style={{
+        backgroundColor: "white",
+        display: "flex",
+        padding: "10px 25px",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 20,
+      }}
+    >
+      <div style={{ display: "flex", gap: 20, width: "100%" }}>
+        <div className="topbar-title-block">
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+            }}
+          >
+            <img width={30} src={Logo} alt="logo" />
+            <h3 className="topbar-title">Audit</h3>
           </div>
-        )}
+          <div onClick={props.sidebar} className="menu-icon sidebar-menu">
+            <MenuRounded />
+          </div>
+        </div>
       </div>
-    </header>
- );
-};
+      {/* <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+          }}
+        >
+          <div className="menu-icon">
+            <NotificationsOutlined />
+          </div>
+          <div className="topbar-account">
+            <img width={30} src={UserLogo} alt="user" />
+            <SettingsOutlined />
+          </div>
+        </div> */}
+    </div>
+  );
+}
 
 export default Header;

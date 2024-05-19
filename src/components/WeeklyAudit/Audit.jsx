@@ -23,6 +23,54 @@ const AuditForm = () => {
         // }
     }, [navigate]);
 
+    const fetchLastAuditDate = async () => {
+        try {
+            const response = await axios.get(`${api}/last-audit-date`);
+            if (response.data && response.data.date) {
+                const date = new Date(response.data.date);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const day = String(date.getDate()).padStart(2, '0');
+                const formattedDate = `${year}-${month}-${day}`;
+    
+                setFormData(prevState => ({...prevState, audit_date: formattedDate }));
+            }
+        } catch (error) {
+            console.error('Error fetching last audit date:', error);
+        }
+    };
+    
+    
+
+    useEffect(() => {
+        fetchLastAuditDate();
+    }, []);
+
+    useEffect(() => {
+        const username = localStorage.getItem('username'); 
+        if (username) {
+            fetchUserDetails(username);
+        }
+    }, []);
+
+    const fetchUserDetails = async (username) => {
+        try {
+            const response = await axios.get(`${api}/users/${username}`);
+            if (response.data) {
+                const { firstName, lastName, phoneNumber } = response.data;
+                setFormData(prevState => ({
+                   ...prevState,
+                    auditor_name: `${firstName} ${lastName}`,
+                    auditor_phone: phoneNumber,
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+        }
+    };
+
+    
+
  const [formData, setFormData] = useState({
     area_name: '',
     audit_date: '',
@@ -186,10 +234,12 @@ const handleSubmit = async (e) => {
                         id="audit_date"
                         name="audit_date"
                         value={formData.audit_date}
-                        onChange={(e) => setFormData({ ...formData, audit_date: e.target.value })}
+                        readOnly
+                        // onChange={(e) => setFormData({...formData, audit_date: e.target.value })}
                         required
                         className="form-select"
                     />
+
                     <br />
                 </div>
                 <div className="auditor-info">

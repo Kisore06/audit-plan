@@ -1,66 +1,176 @@
-.header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    background-color: #efd9f5;
-    z-index: 1000;
-    border-bottom: 2px solid #ccc;  
-}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+  }
+  
 
-.header-container {
+.app-topbar h3 {
+    font-weight: 500;
+  }
+  
+  .menu-icon {
+    background-color: rgb(224, 240, 255);
+    height: 25px;
+    padding: 5px;
+    border-radius: 8px;
+    color: rgb(14, 120, 220);
+  }
+  
+  .menu-icon:hover {
+    background-color: rgb(14, 120, 220);
+    color: white;
+    cursor: pointer;
+  }
+  
+  .search-input input {
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-weight: 400;
+    background-color: transparent;
+    width: 280px;
+  }
+  
+  .search-input {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    width: 100%;
-}
-
-.logo {
-    height: 50px;
-}
-
-h1 {
-    margin: 0;
-    font-size: 24px;
-   }
-
-   .user-info {
+    align-items: center;
+    border: 0.5px solid rgb(188, 188, 188);
+    border-radius: 5px;
+    padding: 10px 10px;
+    gap: 5px;
+    min-width: 250px;
+    margin-left: 100px;
+    color: grey;
+    background-color: rgb(248, 250, 252);
+  }
+  
+  .topbar-account {
+    color: rgb(14, 120, 220);
     display: flex;
     align-items: center;
-   }
-   
-   .user-icon {
-    height: 30px;
-    margin-right: 10px;
-   }
-   
-   .dropdown {
-    position: relative;
-    display: inline-block;
-   }
-   
-   .dropdown-content {
+    gap: 20px;
+    background-color: rgb(224, 240, 255);
+    padding: 8px 15px;
+    border-radius: 50px;
+  }
+  
+  .topbar-account:hover {
+    background-color: rgb(14, 120, 220);
+    color: white;
+    cursor: pointer;
+  }
+  .menu-item {
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+    margin-top: 5px;
+  }
+  
+  .menu-active,
+  .menu-item:hover {
+    background-color: rgb(224, 240, 255);
+    color: rgb(14, 120, 220);
+  }
+  
+  .menu-item:hover {
+    cursor: pointer;
+  }
+  
+  .app-sidebar {
+    min-width: 270px;
+    height: 100%;
+    transition: left 0.3s;
+    overflow: auto;
+    /* padding-bottom: 80px; */
+    padding: 20px;
+  }
+  
+  
+  .sidebar-open {
+    left: 0;
+  }
+  .app-body {
+    overflow: auto;
+    padding: 20px;
+    padding-bottom: 80px;
+  }
+  
+  .sidebar-menu {
     display: none;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 60px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-    right: 0; 
-   }
-   
-   .dropdown-content a {
-    color: black;
-    padding: 10px;
-    text-decoration: none;
-    display: block;
-   }
-   
-   .dropdown:hover .dropdown-content {
-    display: block;
-   }
-   
+  }
+  
+  .topbar-title-block {
+      display: flex;
+      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+  }
+
+  .nav-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .nav-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between icon and text */
+    padding: 10px 20px;
+    background-color: #f0f2f5;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .nav-list li:hover {
+    background-color: #dfe4ea;
+    cursor: pointer;
+  }
+  
+  .nav-list li.active {
+    background-color: #b2bec3;
+  }
+  
+  .nav-list li:first-child {
+    font-weight: bold;
+  }
+  
+  
+  
+  @media (max-width: 1371px) {
+    .app-sidebar {
+      display: none;
+    }
+  
+    .sidebar-menu {
+      display: block;
+    }
+  
+    .sidebar-open {
+      display: block;
+      position: fixed;
+      z-index: 2;
+      box-shadow: 0.1px 0.5px 0.9px 0.5px rgb(188, 188, 188);
+    }
+  }
+  
+  @media (max-width: 882px) {
+    .topbar-title {
+      display: none;
+    }
+  
+    .search-input {
+      display: none;
+    }
+  
+    .topbar-title-block{
+      justify-content: start;
+      gap: 10px;
+    }
+  }

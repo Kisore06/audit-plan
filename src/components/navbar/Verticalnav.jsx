@@ -1,90 +1,69 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './Vertical.css'; // Adjust the path as necessary
-import { Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import React from 'react';
+import { useNavigate } from "react-router-dom";
 import HomeIcon from '@mui/icons-material/Home';
-import { Link } from 'react-router-dom';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import InfoIcon from '@mui/icons-material/Info';
+import { useEffect,useState } from 'react';
 
-const Sidebar = () => {
- const [open, setOpen] = useState(false);
- const drawerRef = useRef(null);
+function AppSideBar(props) {
+  const navigate = useNavigate();
+  // eslint-disable-next-line
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // eslint-disable-next-line
+  const [username, setUsername] = useState('');
 
- useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (drawerRef.current && !drawerRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
+    if (storedUsername && storedRole) {
+      setUsername(storedUsername);
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+      setUsername('');
+    }
+  }, []);
+// eslint-disable-next-line
+  const handleLogout = () => {
+    localStorage.removeItem('username');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('loginTime');
+    setIsLoggedIn(false);
+    setUsername('');
+    navigate('/');
+    window.location.reload();
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
- }, []);
+  // Function to handle navigation
+  const goToPage = (path) => {
+    navigate(path);
+  };
 
- const handleDrawerOpen = () => {
-    setOpen(true);
- };
+  return (
+    <div
+      className={props.open? "app-sidebar sidebar-open" : "app-sidebar"}
+      style={{
+        backgroundColor: "white",
+      }}
+    >
+      <ul className="nav-list">
+        <li onClick={() => goToPage('/week')}>
+          <HomeIcon />
+          Home
+        </li>
+        <li onClick={() => goToPage('/admin-register')}>
+          <PersonAddIcon />
+          Add new user
+        </li>
+        <li onClick={() => goToPage('/user-details')}>
+          <InfoIcon />
+          User Info
+        </li>
+        
+      </ul>
+    </div>
+  );
+}
 
- const handleDrawerClose = () => {
-    setOpen(false);
- };
-
-
-
- return (
-    <>
-      <nav className="sidebar-nav">
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          onClick={handleDrawerOpen}
-          edge="start"
-          className={open ? 'hide-icon' : ''}
-          size="large"
-          sx={{
-            position: 'absolute',
-            left: 10,
-            top: 15,
-          }}
-        >
-          <MenuIcon sx={{ fontSize: 25 }} />
-        </IconButton>
-      </nav>
-      <Drawer
-        ref={drawerRef}
-        sx={{
-          width: 240,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: 240,
-            boxSizing: 'border-box',
-          },
-        }}
-        variant="persistent"
-        anchor="left"
-        open={open}
-        disableBackdropClick="true"
-      >
-        <div className="drawer-header">
-          <IconButton onClick={handleDrawerClose}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </div>
-        <List>
-          {/* Navigation items */}
-          <ListItemButton component={Link} to="/admin-register" onClick={handleDrawerClose}>
-            <ListItemIcon>
-              <HomeIcon />
-            </ListItemIcon>
-            <ListItemText primary="Home" />
-          </ListItemButton>
-          {/* Add other navigation items as needed */}
-        </List>
-      </Drawer>
-    </>
- );
-};
-
-export default Sidebar;
+export default AppSideBar;

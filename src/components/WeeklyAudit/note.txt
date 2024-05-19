@@ -1,144 +1,109 @@
-function exportTableToCSV(data) {
-        const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values
-        const header = Object.keys(data[0]);
-        let csv = [];
-        let lastSerialNumber = '';
-    
-        data.forEach((row, index) => {
-            // Prepare the row data
-            const values = header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(',');
-            // Check if the current row's SerialNumber is the same as the last one
-            if (row.SerialNumber !== lastSerialNumber) {
-                // If not, add the row as is
-                csv.push(values);
-            } else {
-                // If it is, modify the CSV line to merge cells
-                // This involves removing the SerialNumber from the CSV line
-                const valuesWithoutSerialNumber = values.split(',').slice(1).join(',');
-                csv.push(',' + valuesWithoutSerialNumber); // Add a comma at the beginning to align with the header
-            }
-            lastSerialNumber = row.SerialNumber;
-        });
-    
-        csv.unshift(header.join(','));
-        csv = csv.join('\r\n');
-    
-        // Create a Blob from the CSV string
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    
-        // Create a link element
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'audit_data.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './Products.css';
+import { IconButton } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import UpdateIcon from '@mui/icons-material/Update';
+
+// const BACKEND_URL = 'http://localhost:3001';
+
+const Brands = () => {
+ const [brands, setBrands] = useState([]);
+ const [editingBrand, setEditingBrand] = useState(null);
+
+ useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/brands');
+        setBrands(response.data);
+      } catch (error) {
+        console.error('Error fetching brands:', error);
+      }
+    };
+
+    fetchBrands();
+ }, []);
+
+ const handleEditClick = (brand) => {
+    setEditingBrand(brand);
+ };
+
+ const handleUpdateClick = async (brand) => {
+    try {
+      await axios.put(`http://localhost:3001/brands/${brand.brand_id}`, { brand_name: editingBrand.brand_name });
+      const response = await axios.get('http://localhost:3001/brands');
+      setBrands(response.data);
+      setEditingBrand(null);
+    } catch (error) {
+      console.error('Error updating brand:', error);
     }
-    
+ };
+
+ const handleDeleteClick = async (brand) => {
+    try {
+      await axios.delete(`http://localhost:3001/brands/${brand.brand_id}`);
+      setBrands(brands.filter(b => b.brand_id !== brand.brand_id));
+    } catch (error) {
+      console.error('Error deleting brand:', error);
+    }
+ };
+
+ const handleBrandNameChange = (event, brand) => {
+    setEditingBrand({ ...brand, brand_name: event.target.value });
+ };
 
 
 
 
-    const handleExport = () => {
-        // Assuming `processedAuditsData` is your data source
-        const dataToExport = Object.entries(processedAuditsData).map(([areaName, areaGenders]) => {
-            return Object.entries(areaGenders).map(([gender, audits]) => {
-                // Find the auditData for the current gender
-                const auditData = auditsData.find(audit => audit.area_name === gender);
-    
-                // Safely access properties of auditData
-                const reportObservation = auditData ? determineReportObservation(auditData) : 'No data found.';
-                const remarksString = auditData ? auditData.remark_1 + ', ' + auditData.remark_2 + ', ' + auditData.remark_3 + ', ' + auditData.remark_4 + ', ' + auditData.remark_5 + ', ' + auditData.remark_6 + ', ' + auditData.remark_7 : '';
-                const suggestions = auditData ? auditData.suggestion || 'Nil' : 'Nil';
-    
-                return {
-                    SerialNumber: serialNumbers[areaName],
-                    AuditArea: areaName,
-                    SpecificArea: gender,
-                    ReportObservation: reportObservation,
-                    Remarks: remarksString,
-                    Suggestions: suggestions,
-                    // Add any other fields you need
-                };
-            });
-        }).flat(); // Flatten the array to get a single array of objects
-    
-        // exportTableToCSV(dataToExport);
-    const doc = new jsPDF("l", "mm", "legal");
+ return (
+  <div style={{ paddingTop: '80px', marginLeft:'50px', marginRight:'50px'}}>
+  <h2 className="product-table-title">Brand List</h2>
+      <div className="scrollable-container">
+      <table className="product-table">
+        <thead>
+          <tr>
+            <th>Brand ID</th>
+            <th>Brand Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {brands.map((brand) => (
+            <tr key={brand.brand_id}>
+              <td>{brand.brand_id}</td>
+              <td>
+                {editingBrand && editingBrand.brand_id === brand.brand_id ? (
+                 <input
+                    type="text"
+                    value={editingBrand.brand_name}
+                    onChange={(event) => handleBrandNameChange(event, brand)}
+                 />
+                ) : (
+                 brand.brand_name
+                )}
+              </td>
+              <td>
+                {editingBrand && editingBrand.brand_id === brand.brand_id ? (
+                 <IconButton aria-label="update" onClick={() => handleUpdateClick(brand)}>
+                    <UpdateIcon />
+                 </IconButton>
+                ) : (
+                 <IconButton aria-label="edit" onClick={() => handleEditClick(brand)}>
+                    <EditIcon />
+                 </IconButton>
+                )}
+                <IconButton aria-label="delete" onClick={() => handleDeleteClick(brand)}>
+                 <DeleteIcon />
+                </IconButton>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+    </div>
+ );
+};
 
-    // Define the columns for the table
-    const columns = ["SerialNumber", "AuditArea", "SpecificArea", "ReportObservation", "Remarks", "Suggestions"];
-
-    // Initialize variables to track the last serial number and area name
-    let lastSerialNumber = '';
-    let lastAuditArea = '';
-
-    // Prepare the body of the table
-    const body = dataToExport.map(item => {
-        const row = [
-            item.SerialNumber !== lastSerialNumber ? item.SerialNumber : '',
-            item.AuditArea !== lastAuditArea ? item.AuditArea : '',
-            item.SpecificArea,
-            item.ReportObservation,
-            item.Remarks,
-            item.Suggestions
-        ];
-
-        // Update the last serial number and area name
-        lastSerialNumber = item.SerialNumber;
-        lastAuditArea = item.AuditArea;
-
-        return row;
-    });
-
-    // Add the table to the PDF and landscape 
-    doc.autoTable({
-        head: [columns],
-        body: body,
-    
-        // Enable cell merging and adjust styles
-        didDrawCell: (data) => {
-            if (data.section === 'body') {
-                const col = data.column.index;
-                const row = data.row.index;
-                if (col === 0 || col === 1) {
-                    const prevRow = body[row - 1];
-                    if (prevRow && (prevRow[col] === data.cell.text || prevRow[col] === '')) {
-                        // Check if the cell is part of a merged cell
-                        if (data.cell.raw === '' || data.cell.raw === prevRow[col]) {
-                            // Remove the border for merged cells
-                            data.cell.styles.lineWidth = 0;
-                            // Center the content of merged cells
-                            data.cell.styles.halign = 'center';
-                            data.cell.styles.valign = 'middle';
-                        } else {
-                            // Apply the border for non-merged cells
-                            data.cell.styles.lineWidth = 0.1;
-                            data.cell.styles.lineColor = [0, 0, 0];
-                            // Ensure non-merged cells are centered
-                            data.cell.styles.halign = 'center';
-                            data.cell.styles.valign = 'middle';
-                        }
-                        data.cell.styles.fillColor = [255, 255, 255]; // Make the cell white to merge with the previous one
-                        data.cell.styles.textColor = [0, 0, 0]; // Set the text color to black
-                    }
-                }
-            }
-        },
-        // Add border lines to the table
-        styles: {
-            lineWidth: 0.1, // Adjust the border line width
-            lineColor: [0, 0, 0], // Set the border line color to black
-            halign: 'center', // Center the text horizontally
-            valign: 'middle' // Center the text vertically
-        },
-        // Adjust the margin for landscape mode
-        margin: { top: 20, left: 10, right: 10, bottom: 20 }
-    });
-    
-    // Save the PDF
-    doc.save('audit_data.pdf');
-    
-}
+export default Brands;

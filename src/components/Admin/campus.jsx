@@ -4,19 +4,35 @@ import api from '../../utils/api';
 import { Button } from '@mui/material'; // Import Button from Material-UI
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link, useNavigate } from 'react-router-dom';
+import Model from 'react-modal';
+import AppLayout from '../AppLayout';
 
-const Campus = () => {
+function Campus(){
+    return <AppLayout rId={1} body={<Body />}/>
+}
+
+const Body = () => {
     const navigate = useNavigate();
-    const [showSubLines, setShowSubLines] = useState(false);
-    // const [selectedDates, setSelectedDates] = useState('');
     const [tasks, setTasks] = useState([]);
      // eslint-disable-next-line
     const [taskDetails, setTaskDetails] = useState(null);   // const [selectedDateAudit, setSelectedDateAudit] = React.useState('');
     const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
+    const [cstvisible, setCSTVisible] = useState(false);
+
+
+    //for popup
+    useEffect(() => {
+        const appElement = document.getElementById('app');
+        if (appElement) {
+          Model.setAppElement(appElement);
+        } else {
+          console.error('App element not found');
+        }
+      }, []);
 
     useEffect(() => {
         const userRole = localStorage.getItem('role');
-        if ( userRole !== 'executer') {
+        if ( userRole !== 'executer' && userRole!== 'admin') {
             navigate('/');
         }
         
@@ -46,14 +62,7 @@ const Campus = () => {
     const handleTaskCardClick = (taskId) => {
         fetchTaskDetails(taskId);
     };
-    
 
-    const toggleSubLines = (title) => {
-        setShowSubLines(prevState => ({
-          ...prevState,
-          [title]: !prevState[title],
-        }));
-    };
 
 
 
@@ -132,43 +141,55 @@ const handleViewDetail = (area, date) => {
             ))}
             </div>
             
-        
+        <div className="flex-container">
+        <div className="flex-item" onClick={() => setCSTVisible(true)}>Check Complete Specific Tasks</div>
+        <Model isOpen={cstvisible} onRequestClose={()=>setCSTVisible(false)} style={
+            {content:{
+                top: '50%',
+                left: '50%',
+                right: 'auto',
+                bottom: 'auto',
+                borderRadius: '10px',
+                marginRight: '-50%',
+                transform: 'translate(-50%, -50%)',
+                }}
+            }   >
+                <h2>Chect Complete Specific tasks</h2>
+                <div className="date-view-audit">
+                <p>Start date:</p>
+                    <input
+                        type="date"
+                        value={dateRange.startDate}
+                        onChange={handleStartDateChange}
+                        placeholder="Start Date"
+                        className="date-range date"
+                    />
+                    <p>End date:</p>
+                    <input
+                        type="date"
+                        value={dateRange.endDate}
+                        onChange={handleEndDateChange}
+                        placeholder="End Date"
+                        className="date-range date"
+                    />
+                    <Link
+                        className="view-button"
+                        to={`/assignWork/${dateRange.startDate}/${dateRange.endDate}`}
+                        onClick={(e) => {
+                            if (!dateRange.startDate || !dateRange.endDate) {
+                                e.preventDefault();
+                                alert('Please select both a start date and an end date before proceeding.');
+                            }
+                        }}
+                    >
+                        <VisibilityIcon /> <span style={{marginLeft:'5px'}}>View</span>
+                    </Link>
+                </div>
+            </Model>
+
+        </div>
    
-    <div className="button-container">
-    <button className="action-button" onClick={() => toggleSubLines('assignTasks')}>Check Assigned Tasks</button>
-    {showSubLines['assignTasks'] && (
-        <div className="date-view-audit">
-        <p>Start date:</p>
-            <input
-                type="date"
-                value={dateRange.startDate}
-                onChange={handleStartDateChange}
-                placeholder="Start Date"
-                className="date-range"
-            />
-            <p>End date:</p>
-            <input
-                type="date"
-                value={dateRange.endDate}
-                onChange={handleEndDateChange}
-                placeholder="End Date"
-                className="date-range"
-            />
-            <Link
-    className="view-button"
-    to={`/assignWork/${dateRange.startDate}/${dateRange.endDate}`}
-    onClick={(e) => {
-        if (!dateRange.startDate || !dateRange.endDate) {
-            e.preventDefault();
-            alert('Please select both a start date and an end date before proceeding.');
-        }
-    }}
->
-    <VisibilityIcon />
-</Link>
-            </div>
-        )}
-    </div>
+    
 
     </div>
   )

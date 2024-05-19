@@ -36,20 +36,6 @@ h3 a:hover {
     margin-left: 20px;
 }
 
-.view-button {
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-}
-
-.view-button {
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
 .view-button i {
     font-size: 16px; 

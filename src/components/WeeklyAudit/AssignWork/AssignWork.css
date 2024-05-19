@@ -1,4 +1,8 @@
-/* AssignWork.css */
+.assigned-work{
+    padding-top: 90px;
+    overflow: auto;
+}
+
 .assign-work-table {
     width: 100%;
     border-collapse: collapse;
