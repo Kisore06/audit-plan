@@ -1,12 +1,30 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-  }
-  
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: #fbf0ff;
+    z-index: 1000;
+    border-bottom: 2px solid #E6EEF5;  
+}
 
-.app-topbar h3 {
-    font-weight: 500;
-  }
+.app-topbar {
+  display: flex;
+  justify-content: space-around; /* This centers children horizontally */
+  align-items: center; /* This centers children vertically */
+  /* Other styles remain unchanged */
+}
+
+.title{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
   
   .menu-icon {
     background-color: rgb(224, 240, 255);
@@ -49,15 +67,17 @@ body {
     color: rgb(14, 120, 220);
     display: flex;
     align-items: center;
-    gap: 20px;
-    background-color: rgb(224, 240, 255);
-    padding: 8px 15px;
+    /* gap: 20px; */
+    /* background-color: rgb(224, 240, 255); */
+    /* padding: 8px 15px; */
     border-radius: 50px;
   }
+
+  
   
   .topbar-account:hover {
-    background-color: rgb(14, 120, 220);
-    color: white;
+    /* background-color: rgb(14, 120, 220); */
+    /* color: white; */
     cursor: pointer;
   }
   .menu-item {
@@ -95,19 +115,20 @@ body {
   .app-body {
     overflow: auto;
     padding: 20px;
-    padding-bottom: 80px;
+    /* padding-bottom: 80px; */
+    background-color: rgb(238, 242, 246);
   }
   
   .sidebar-menu {
     display: none;
   }
   
-  .topbar-title-block {
+  /* .topbar-title-block {
       display: flex;
       gap: 20px;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-  }
+  } */
 
   .nav-list {
     list-style-type: none;
@@ -140,6 +161,10 @@ body {
   .nav-list li:first-child {
     font-weight: bold;
   }
+
+  /* .logout{
+    padding-top: 500px;
+  } */
   
   
   

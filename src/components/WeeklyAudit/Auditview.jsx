@@ -96,6 +96,7 @@ const Body = () => {
     const analysisWeek = `${month} ${year} (week ${weekNumber})`;
 
     return (
+        <div style={{backgroundColor:'white'}}>
         <div style={{ paddingTop: '90px', overflow:'auto' }}>
             <div style={{ textAlign: "center" }}>
                 <h2>Weekly Audit Details</h2>
@@ -193,6 +194,7 @@ const Body = () => {
             ) : (
                 <p>No audit data found for the selected area and date.</p>
             )}
+        </div>
         </div>
     );
 };

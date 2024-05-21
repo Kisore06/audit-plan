@@ -205,7 +205,7 @@ const handleSubmit = async (e) => {
 
 
  return (
-    <div style={{ paddingTop: '90px' }}>
+    <div style={{ paddingTop: '90px',backgroundColor:'white' }}>
     <div className="form-container">
             <h2 className="he2">Remote Area - Weekly Audit Plan</h2>
             <form className="audit-form" onSubmit={handleSubmit}>

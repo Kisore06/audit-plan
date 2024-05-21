@@ -144,6 +144,7 @@ const Body = () => {
     };
 
     return (
+        <div style={{backgroundColor: 'white'}}>
         <div style={{ paddingTop: '90px', overflow: 'auto', marginLeft:'10px', marginRight:'10px' }}>
         <h2>Tasks for {formatDate(startDate)} to {formatDate(endDate)}</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -192,6 +193,7 @@ const Body = () => {
                     ))}
                 </tbody>
             </table>
+        </div>
         </div>
     );
     

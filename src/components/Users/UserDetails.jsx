@@ -89,6 +89,7 @@ const Body = () => {
     };
 
     return (
+        <div style={{backgroundColor: 'white'}}>
         <div style={{ paddingTop: '80px', marginLeft:'50px', marginRight:'50px', marginBottom:'60px'}}>
             <h2>Admins</h2>
             <table className="user-details-table">
@@ -278,6 +279,7 @@ const Body = () => {
                     ))}
                 </tbody>
             </table>
+        </div>
         </div>
     );
 }

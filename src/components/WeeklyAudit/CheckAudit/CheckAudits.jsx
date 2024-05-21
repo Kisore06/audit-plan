@@ -380,7 +380,8 @@ const sendDataAndDownloadPDF = async () => {
 };
 
     return (
-        <div style={{paddingBottom:'50px', marginLeft:'10px', marginRight:'10px'}}>
+        <div style={{backgroundColor:'white'}}>
+        <div style={{paddingBottom:'80px', marginLeft:'10px', marginRight:'10px'}}>
         <div style={{ paddingTop: '90px', overflow: 'auto' }}>
         <div className="testDownload">
         <div style={{ textAlign: "center" }}>
@@ -521,6 +522,7 @@ const sendDataAndDownloadPDF = async () => {
             )}
         </div>
             <button className="action-button" onClick={sendDataAndDownloadPDF}>Download PDF</button>
+        </div>
         </div>
     );
     
