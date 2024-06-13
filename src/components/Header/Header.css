@@ -9,13 +9,16 @@
     padding: 10px;
     background-color: #fbf0ff;
     z-index: 1000;
-    border-bottom: 2px solid #E6EEF5;  
+    /* border-bottom: 2px solid #ccc;  */
+    
 }
 
 .app-topbar {
   display: flex;
   justify-content: space-around; /* This centers children horizontally */
-  align-items: center; /* This centers children vertically */
+  align-items: center;
+  border-bottom: 2px solid #ccc; 
+  /* This centers children vertically */
   /* Other styles remain unchanged */
 }
 
@@ -100,7 +103,7 @@
   }
   
   .app-sidebar {
-    min-width: 270px;
+    min-width: 200px;
     height: 100%;
     transition: left 0.3s;
     overflow: auto;
@@ -180,7 +183,7 @@
     .sidebar-open {
       display: block;
       position: fixed;
-      z-index: 2;
+      z-index: 1;
       box-shadow: 0.1px 0.5px 0.9px 0.5px rgb(188, 188, 188);
     }
   }
@@ -197,5 +200,22 @@
     .topbar-title-block{
       justify-content: start;
       gap: 10px;
+    }
+  }
+
+  @media (max-width: 480px){
+    .app-sidebar {
+      display: none;
+    }
+  
+    .sidebar-menu {
+      display: block;
+    }
+  
+    .sidebar-open {
+      display: block;
+      position: fixed;
+      z-index: 1;
+      box-shadow: 0.1px 0.5px 0.9px 0.5px rgb(188, 188, 188);
     }
   }

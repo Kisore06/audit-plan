@@ -3,8 +3,9 @@ import './Audit.css';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
-import api from "../../utils/api"
-
+import api from "../../utils/api";
+import Header from '../Header/Header';
+import Footer from '../Footer/Footer';
 
 const AuditForm = () => {
     const navigate = useNavigate();
@@ -205,7 +206,9 @@ const handleSubmit = async (e) => {
 
 
  return (
-    <div style={{ paddingTop: '90px',backgroundColor:'white' }}>
+    <div>
+    <Header></Header>
+
     <div className="form-container">
             <h2 className="he2">Remote Area - Weekly Audit Plan</h2>
             <form className="audit-form" onSubmit={handleSubmit}>
@@ -325,6 +328,7 @@ const handleSubmit = async (e) => {
                 <input type="submit" className="form-submit" value="Submit" />
             </form>
         </div>
+        <Footer></Footer>
         </div>
  );
 };

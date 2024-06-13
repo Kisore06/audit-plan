@@ -479,7 +479,7 @@ app.get('/audits/by-date-and-area', (req, res) => {
 app.post('/submit-audit-form', async (req, res) => {
     console.log("triggered")
     console.log(Object.values(req.body))
-    const [ date, taskId, auditArea, specificArea, reportObservation, remarks, suggestions, taskIdSpecific, actionTaken, progress ] = Object.values(req.body);
+    const [ date, taskId, auditArea, specificArea, reportObservation, remarks, taskIdSpecific, actionTaken, progress ] = Object.values(req.body);
     
     if (!date || !taskId || !auditArea || !specificArea || !reportObservation || !remarks || !taskIdSpecific || !actionTaken || !progress) {
         return res.status(400).send({ message: 'All fields are required.' });
@@ -487,8 +487,8 @@ app.post('/submit-audit-form', async (req, res) => {
 
     const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, suggestions, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const values = [date, taskId, auditArea, specificArea, reportObservation, remarks, suggestions, taskIdSpecific, actionTaken, progress];
-    console.log(values)
-    db.query(query, values, (error, results) => {
+    console.log("values : "+values)
+    db.query(query, values, (error, res) => {
         console.log(error)
         if (error) {
             console.log(error)

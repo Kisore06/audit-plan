@@ -200,6 +200,7 @@ const sendDataAndDownloadPDF = async () => {
 
 
  return (
+  <div style={{backgroundColor:'white'}}>
   <div className="task-table-container">
   {noDataMessage && <p className="no-data-message">{noDataMessage}</p>}
     <div style={{ textAlign: "center" }}>
@@ -250,6 +251,7 @@ const sendDataAndDownloadPDF = async () => {
 
       <button className="action-button" onClick={sendDataAndDownloadPDF}>Download PDF</button>
 
+    </div>
     </div>
  );
 }

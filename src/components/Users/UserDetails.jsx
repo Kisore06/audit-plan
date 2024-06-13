@@ -9,6 +9,7 @@ import UpdateIcon from '@mui/icons-material/Update';
 import AppLayout from '../AppLayout';
 
 
+
 function UserDetails(){
     return <AppLayout rId={1} body={<Body />}/>
 }
@@ -89,8 +90,10 @@ const Body = () => {
     };
 
     return (
-        <div style={{backgroundColor: 'white'}}>
-        <div style={{ paddingTop: '80px', marginLeft:'50px', marginRight:'50px', marginBottom:'60px'}}>
+        // <div style={{backgroundColor: 'white'}}>
+        <div style={{backgroundColor:'white'}}>
+        <div style={{paddingBottom:'80px', marginLeft:'10px', marginRight:'10px'}}>
+        <div style={{ paddingTop: '90px', overflow: 'auto' }}>
             <h2>Admins</h2>
             <table className="user-details-table">
                 <thead>
@@ -280,7 +283,8 @@ const Body = () => {
                 </tbody>
             </table>
         </div>
-        </div>
+     </div>
+     </div>
     );
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MenuRounded, AccountCircle } from "@mui/icons-material";
 import Popover from '@mui/material/Popover';
@@ -11,6 +11,7 @@ function Header(props) {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const [userRole, setUserRole] = useState(''); // Added state to store user role
   const [anchorEl, setAnchorEl] = useState(null);
 
   const headerRef = useRef(null);
@@ -29,17 +30,19 @@ function Header(props) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []); 
+  }, []);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
     const storedRole = localStorage.getItem('role');
     if (storedUsername && storedRole) {
       setUsername(storedUsername);
+      setUserRole(storedRole); // Store the user role
       setIsLoggedIn(true);
     } else {
       setIsLoggedIn(false);
       setUsername('');
+      setUserRole(''); // Reset user role
     }
   }, []);
 
@@ -50,6 +53,7 @@ function Header(props) {
     localStorage.removeItem('loginTime');
     setIsLoggedIn(false);
     setUsername('');
+    setUserRole(''); // Reset user role
     navigate('/');
     window.location.reload();
   };
@@ -67,7 +71,7 @@ function Header(props) {
 
   return (
     <div
-    ref={headerRef}
+      ref={headerRef}
       className="app-topbar"
       style={{
         backgroundColor: "white",
@@ -76,10 +80,9 @@ function Header(props) {
         justifyContent: "space-between",
         alignItems: "center",
         gap: 20,
-        borderBottomColor: "black"
       }}
     >
-      <div style={{ display: "flex", gap: 20,justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 20, justifyContent: "center" }}>
         <div className="topbar-title-block">
           <div
             style={{
@@ -88,17 +91,17 @@ function Header(props) {
               alignItems: "center",
             }}
           >
-            <div onClick={props.sidebar} className="menu-icon sidebar-menu">
-              <MenuRounded />
-            </div>
+      {(!userRole || userRole!== 'user') && ( // Conditionally render the menu icon with corrected condition
+        <div onClick={props.sidebar} className="menu-icon sidebar-menu">
+          <MenuRounded />
+        </div>
+      )}
             <img width={30} src={Logo} alt="logo" />
           </div>
         </div>
-        {/* <h3 className="topbar-title">Audit</h3> */}
-
       </div>
       <div className='title'>
-      <h3 className="topbar-title">Audit</h3>
+        <h3 className="topbar-title">Audit</h3>
       </div>
       {isLoggedIn && (
         <div className="topbar-account" onClick={handleClick}>
