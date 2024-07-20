@@ -327,7 +327,7 @@ app.post('/tasks', (req, res) => {
     
 });
 
-  // API endpoint to retrieve tasks by specific date
+  // API endpoint to retrieve weekly tasks by specific date
   app.get('/tasks/:date', (req, res) => {
     const { date } = req.params;
   
@@ -344,6 +344,57 @@ app.post('/tasks', (req, res) => {
       }
     });
   });
+
+//get weekly_tasks
+app.get('/tasks', (req,res) => {
+    const query = `SELECT * FROM weekly_tasks`
+    db.query(query, (error,results) => {
+        if(error) {
+            console.error("cannot get weekly tasks")
+            res.status(500).send("cannot get weekly tasks")
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+//get daily tasks
+app.get('/dailytasks', (req,res) => {
+    const query = `SELECT * FROM audit_tasks`
+    db.query(query, (error,results) => {
+        if(error) {
+            console.error("cannot get weekly tasks")
+            res.status(500).send("cannot get weekly tasks")
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+
+//assign daily task to a person
+app.post('/dailyPersonAssign', (req, res) => {
+    const { daily_audit_id, date, username, selected_areas } = req.body;
+  
+    const rowsToInsert = selected_areas.map(area => ({
+      daily_audit_id,
+      date,
+      username,
+      selected_area: area
+    }));
+  
+    const query = 'INSERT INTO daily_audit_assign (daily_audit_id, date, username, selected_area) VALUES ?';
+    db.query(query, [rowsToInsert.map(row => Object.values(row))], (err, result) => {
+      if (err) {
+        console.error('Error inserting rows:', err);
+        res.status(500).send('Error inserting rows');
+        return;
+      }
+      console.log('Rows inserted:', result.affectedRows);
+      res.status(200).send('Data stored successfully');
+    });
+  });
+
 
 // remote-area-weekly
 app.get('/remote_area_weekly', (req, res) => {
@@ -388,32 +439,6 @@ app.post('/assignTask', (req, res) => {
                     res.send({ message: 'Task assigned successfully' });
                 }
             });
-        }
-    });
-});
-
-//get weekly_tasks
-app.get('/tasks', (req,res) => {
-    const query = `SELECT * FROM weekly_tasks`
-    db.query(query, (error,results) => {
-        if(error) {
-            console.error("cannot get weekly tasks")
-            res.status(500).send("cannot get weekly tasks")
-        } else {
-            res.send(results);
-        }
-    });
-});
-
-//get daily tasks
-app.get('/dailytasks', (req,res) => {
-    const query = `SELECT * FROM audit_tasks`
-    db.query(query, (error,results) => {
-        if(error) {
-            console.error("cannot get weekly tasks")
-            res.status(500).send("cannot get weekly tasks")
-        } else {
-            res.send(results);
         }
     });
 });
