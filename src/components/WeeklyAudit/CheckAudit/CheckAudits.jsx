@@ -210,9 +210,7 @@ const CheckAudits = () => {
         alert("Another task has already been submitted for this area on this date.");
         return; 
         }
-    
-        const newTaskId = formData.taskIdSpecific;
-    
+        
         const progressValue = formData.progress === 'inprogress'? 'In Progress' : 'Completed';
     
         try {
@@ -235,14 +233,8 @@ const CheckAudits = () => {
                 }),
             });          
     
-            if (!response.ok) {
-                throw new Error('Failed to submit data');
-            }
-    
-            // Update the assignedTaskIds state to include the new task ID and area_gender
-            setAssignedTaskIds([...assignedTaskIds, { taskId: newTaskId, area_gender: selectedGender, date: date }]);
-    
-
+            if (response.ok){
+                
             const templateParams ={
                 from_name: 'Kishore.R',
                 from_email:' Kishore.cb20@bitsathy.ac.in',
@@ -250,12 +242,12 @@ const CheckAudits = () => {
                 message: `The action taken was: ${formData.actionTaken} and the specific area is: ${selectedGender}.`,
             };
             emailjs.send('service_nil48bf', 'template_bn0iql4', templateParams, 'Id7VjWrFQJNXniBq6')
-             .then((result) => {
+                .then((result) => {
                     alert('Email successfully sent!');
                 }, (error) => {
                     alert('Failed to send email:', error);
                 });
-                
+
             setIsFormVisible(false);
             setFormData({
                 taskIdSpecific: '',
@@ -263,7 +255,21 @@ const CheckAudits = () => {
                 progress: 'inprogress',
             });
             alert("Specific Task ID assigned Successfully...");
+            }
+
+            if (!response.ok) {
+                throw new Error('Failed to submit data');
+            }
             
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to assign Specific Task ID and send email. Please try again.');
+        }
+    };
+
+
+            
+                       
                         // const recipient = 'dalekishore002@gmail.com'; 
             // const subject = encodeURIComponent('Specific Task ID Assigned'); 
             // const body = encodeURIComponent('New TAsks are assigned for this week. Kindly check the website for updates.'); 
@@ -271,13 +277,8 @@ const CheckAudits = () => {
             // const mailtoLink = `mailto:${recipient}?subject=${subject}&body=${body}`;
         
             // window.open(mailtoLink, '_blank');
-            
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to assign Specific Task ID and send email. Please try again.');
-        }
-    };
-    
+
+
 
     //img view
     const handleOpenModal = (audit) => {

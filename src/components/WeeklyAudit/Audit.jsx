@@ -7,6 +7,7 @@ import api from "../../utils/api"
 
 
 const AuditForm = () => {
+    
     const navigate = useNavigate();
     useEffect(() => {
     const userRole = localStorage.getItem('role');
@@ -203,12 +204,48 @@ const handleSubmit = async (e) => {
     }
 };
 
+// const areaTranslations = {
+//     "Main Auditorium Backside - male": "முக்கிய அரங்கு பின்புறம் - ஆண்",
+//     "Main Auditorium Backside - female": "முக்கிய அரங்கு பின்புறம் - பெண்",
+//     "Learning Centre Backside - male": "கற்றல் மையம் பின்புறம் - ஆண்",
+//     "Learning Centre Backside - female": "கற்றல் மையம் பின்புறம் - பெண்",
+//     "Football Playground Restroom - male": "கால்பந்து மைதானம் உணவகம் - ஆண்",
+//     "Football Playground Restroom - female": "கால்பந்து மைதானம் உணவகம் - பெண்",
+//     "SF Block VIP Lounge": "எஸ்.எஃப் பிளாக் வைபி லோஜ்",
+//     "Vedanayagam Auditorium VIP Lounge - male": "வேதநாயகம் அரங்கு வைபி லோஜ் - ஆண்",
+//     "Vedanayagam Auditorium VIP Lounge - female": "வேதநாயகம் அரங்கு வைபி லோஜ் - பெண்",
+//     "Indoor Stadium - male": "உள்நாட்டு அரங்கு - ஆண்",
+//     "Indoor Stadium - female": "உள்நாட்டு அரங்கு - பெண்",
+//     "Main Parking Restroom - male": "முக்கிய பார்கிங் உணவகம் - ஆண்",
+//     "Main Parking Restroom - female": "முக்கிய பார்கிங் உணவகம் - பெண்",
+//     "Boys Hostel Canteen - male": "ஆண் வாழவிடுத்தான்மையம் உணவகம் - ஆண்",
+//     "Boys Hostel Canteen - female": "ஆண் வாழவிடுத்தான்மையம் உணவகம் - பெண்",
+//     "Girls Hostel Canteen - male": "பெண் வாழவிடுத்தான்மையம் உணவகம் - ஆண்",
+//     "Girls Hostel Canteen - female": "பெண் வாழவிடுத்தான்மையம் உணவகம் - பெண்",
+//     "Music club": "இசை கழகம்",
+//     "Chairman Room & Chief Executive Room": "தலைவர் அறை & முதலான் அறை",
+//     "SF Block Board Room": "எஸ்.எஃப் பிளாக் போர்டு அறை",
+//     "New Store Room": "புதிய வார்ப்பு அறை",
+//     "Tennis Ground": "டென்னிஸ் மைதானம்",
+//     "Quarters": "பணியாளர் வாழவிடுத்தான்மையம்"
+//   };
+  
+//   const [currentLanguage, setCurrentLanguage] = useState('english');
+
+//    const toggleLanguage = () => {
+//     setCurrentLanguage(currentLanguage === 'english' ? 'tamil' : 'english');
+//   };
+
 
  return (
     <div style={{ paddingTop: '90px' }}>
     <div className="form-container">
             <h2 className="he2">Remote Area - Weekly Audit Plan</h2>
             <form className="audit-form" onSubmit={handleSubmit}>
+            {/* <label>Change Language: </label>
+            <button onClick={toggleLanguage} className="language-toggle-btn">
+                {currentLanguage === 'english' ? 'Tamil' : 'English'}
+            </button> */}
                 <div className="form-header">
                     <label className="form-label" htmlFor="areaName">Area Name:</label>
                     <select
@@ -219,6 +256,26 @@ const handleSubmit = async (e) => {
                         required
                         className="form-select"
                     >
+                    {/* {currentLanguage === 'tamil' ? (
+                        <>
+                        <option value="">Select Area</option>
+                        {area.map((area, index) => (
+                            <option key={index} value={area.area_gender}>
+                                {area.area_gender_tamil}
+                            </option>
+                        ))}
+                        </>
+                    ): (
+                        <>
+                        <option value="">Select Area</option>
+                        {area.map((area, index) => (
+                            <option key={index} value={area.area_gender}>
+                                {area.area_gender}
+                            </option>
+                        ))}
+                        </> 
+                    )} */}
+
                         <option value="">Select Area</option>
                         {area.map((area, index) => (
                             <option key={index} value={area.area_gender}>

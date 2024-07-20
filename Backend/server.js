@@ -273,6 +273,78 @@ app.delete('/users/:id', (req, res) => {
     });
 });
 
+
+//week taskid assign
+app.post('/tasks', (req, res) => {
+    const { taskId, selectedWeek, weekDates } = req.body;
+    const [year, week] = selectedWeek.split('-W');
+
+    // Array to store promises for each db query
+    const promises = [];
+
+    const checkTask = `SELECT * FROM weekly_tasks WHERE weekly_taskId = ?`
+    db.query(checkTask, [taskId], (error, results) => {
+        if (error) {
+            console.error('Database error:', error);
+            res.status(500).send({ message: 'Database error', error: error.message }); 
+        }else if (results.length > 0) {
+            res.status(400).send({ message: 'User already exists' });
+        }else{
+            weekDates.forEach(date => {
+                const insertTask = `
+                    INSERT INTO weekly_tasks (weekly_taskId, weekNumber, year, date)
+                    VALUES (?, ?, ?, ?)
+                `;
+                const promise = new Promise((resolve, reject) => {
+                    db.query(insertTask, [taskId, parseInt(week), parseInt(year), date], (err, result) => {
+                        if (err) {
+                            if (err.code === 'ER_DUP_ENTRY') {
+                                console.error(`Task ID already exists for ${date}`);
+                                reject(`Task ID already exists for ${date}. Please choose a different date.`);
+                            } else {
+                                console.error('Error inserting task:', err);
+                                reject('Error inserting task. Please try again later.');
+                            }
+                        } else {
+                            console.log(`Task ID '${taskId}' inserted for ${date}`);
+                            resolve();
+                        }
+                    });
+                });
+                promises.push(promise);
+            });
+        
+            // Wait for all db queries to complete
+            Promise.all(promises)
+                .then(() => {
+                    res.send('All tasks submitted successfully');
+                })
+                .catch((error) => {
+                    res.status(400).send(error); 
+                });
+        }
+    })
+    
+});
+
+  // API endpoint to retrieve tasks by specific date
+  app.get('/tasks/:date', (req, res) => {
+    const { date } = req.params;
+  
+    const getTasksByDate = `
+      SELECT * FROM weekly_tasks
+      WHERE date = ?
+    `;
+    db.query(getTasksByDate, [date], (err, results) => {
+      if (err) {
+        console.error('Error fetching tasks:', err);
+        res.status(500).json({ error: 'Failed to retrieve tasks' });
+      } else {
+        res.json(results);
+      }
+    });
+  });
+
 // remote-area-weekly
 app.get('/remote_area_weekly', (req, res) => {
     console.log('vanthuten...')
@@ -316,6 +388,32 @@ app.post('/assignTask', (req, res) => {
                     res.send({ message: 'Task assigned successfully' });
                 }
             });
+        }
+    });
+});
+
+//get weekly_tasks
+app.get('/tasks', (req,res) => {
+    const query = `SELECT * FROM weekly_tasks`
+    db.query(query, (error,results) => {
+        if(error) {
+            console.error("cannot get weekly tasks")
+            res.status(500).send("cannot get weekly tasks")
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+//get daily tasks
+app.get('/dailytasks', (req,res) => {
+    const query = `SELECT * FROM audit_tasks`
+    db.query(query, (error,results) => {
+        if(error) {
+            console.error("cannot get weekly tasks")
+            res.status(500).send("cannot get weekly tasks")
+        } else {
+            res.send(results);
         }
     });
 });
@@ -478,7 +576,7 @@ app.get('/audits/by-date-and-area', (req, res) => {
 // Submit audit form data
 app.post('/submit-audit-form', async (req, res) => {
     console.log("triggered")
-    console.log(Object.values(req.body))
+    console.log("object:", Object.values(req.body))
     const [ date, taskId, auditArea, specificArea, reportObservation, remarks, suggestions, taskIdSpecific, actionTaken, progress ] = Object.values(req.body);
     
     if (!date || !taskId || !auditArea || !specificArea || !reportObservation || !remarks || !taskIdSpecific || !actionTaken || !progress) {
@@ -487,15 +585,15 @@ app.post('/submit-audit-form', async (req, res) => {
 
     const query = 'INSERT INTO specific_task (date, task_id, audit_area, specific_area, report_observation, remarks, suggestions, task_id_specific, action_taken, progress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const values = [date, taskId, auditArea, specificArea, reportObservation, remarks, suggestions, taskIdSpecific, actionTaken, progress];
-    console.log(values)
-    db.query(query, values, (error, results) => {
-        console.log(error)
+    console.log("values", values)
+    db.query(query, values, (error) => {
         if (error) {
-            console.log(error)
+            console.log("error", error)
             console.error('Error inserting audit form data:', error);
             return res.status(500).send({ message: 'Error inserting audit form data', error: error.message });
         } else {
-            console.log("success")
+            console.log("success");
+            res.status(201).send({ message: 'Audit form data inserted successfully.' });
         }
     });
 });
